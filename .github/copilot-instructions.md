@@ -48,7 +48,7 @@ make run-rust
 ```
 
 ### Important Build Notes
-- **GHC Version Requirement**: MUST use GHC 8.10.7 or earlier. GHC 9.2+ is incompatible with Agda-generated code.
+- **GHC Version Requirement**: MUST use GHC 9.0 or earlier. GHC 9.2+ is incompatible with Agda-generated code. **Recommended: GHC 8.10.7** (tested in CI).
 - **Agda Standard Library**: Requires agda-stdlib v1.7.3 (must match Agda 2.6.3)
 - **Build Times**: Building Agda from scratch takes 2-5 minutes on first run; subsequent runs are faster
 - **Test Validation**: `make test-agda` compares `generated.rs` with `rust/expected.rs` using `diff -u`
@@ -83,7 +83,7 @@ make run-rust
 ### Configuration Files
 - `Cargo.toml`: Rust package config (binary path is `rust/main.rs`)
 - `.github/workflows/test.yml`: CI pipeline
-- `.cargo/`: Cargo configuration directory
+- `.cargo/config.toml`: Sets custom target directory to `rust-build`
 
 ## CI/CD Workflow
 
@@ -110,7 +110,7 @@ Before committing changes:
 2. **Agda test**: Ensure `make test-agda` passes (generated code matches expected)
 3. **Rust test**: Ensure `make test-rust` passes
 4. **If modifying Agda**: Regenerate expected output with `./agda-build/Main > rust/expected.rs`
-5. **If modifying Rust**: Ensure changes match the AST abstraction
+5. **If modifying Rust**: Ensure changes are reflected in the Agda AST definition to maintain consistency between the two implementations
 
 ## Common Patterns
 
@@ -122,8 +122,8 @@ The Agda AST simplifies Rust patterns:
 ### Dining Philosophers Solution
 Uses **ordered resource hierarchy**:
 - 5 forks numbered 0-4
-- Philosophers always pick up lower-numbered fork first
-- Prevents circular wait and deadlock
+- Philosophers always pick up the lower-numbered fork first (except the last philosopher)
+- This ordering prevents circular wait conditions and deadlock
 
 ## Dependencies
 
@@ -137,6 +137,6 @@ Uses **ordered resource hierarchy**:
 
 - **Trust these instructions**: Only search for additional information if instructions are incomplete or incorrect
 - **Use Makefile**: Don't run `agda` or `cargo` commands directly unless necessary
-- **GHC version is critical**: The project will NOT compile with GHC 9.2+
+- **GHC version is critical**: The project will NOT compile with GHC 9.2+ (use GHC 9.0 or earlier)
 - **Generated files**: `agda-build/` and `generated.rs` are generated and should not be manually edited
 - **Test file**: `rust/expected.rs` must be kept in sync with `rust/main.rs` logic
