@@ -25,10 +25,10 @@ run-agda: agda-build/Main
 generated.rs: agda-build/Main
 	./agda-build/Main > $@
 
-test-agda: generated.rs rust/expected.rs
-	@echo "Comparing Agda-generated Rust code against expected output..."
-	diff -u rust/expected.rs generated.rs
-	@echo "Output matches expected output."
+test-agda: generated.rs rust/main.rs
+	@echo "Comparing Agda-generated Rust code against main.rs..."
+	diff -u rust/main.rs generated.rs
+	@echo "Output matches main.rs."
 
 # Delete all intermediate files, including the executable
 clean-agda:
