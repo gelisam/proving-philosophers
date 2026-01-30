@@ -47,7 +47,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y agda agda-stdlib
           mkdir -p ~/.agda
-          echo "/usr/share/agda-stdlib/standard-library.agda-lib" >> ~/.agda/libraries
+          # Find the actual location of the standard-library.agda-lib file
+          AGDA_STDLIB_PATH=$(dpkg -L agda-stdlib | grep "standard-library.agda-lib$")
+          echo "$AGDA_STDLIB_PATH" >> ~/.agda/libraries
           echo "standard-library" >> ~/.agda/defaults
 
       - name: Run tests
