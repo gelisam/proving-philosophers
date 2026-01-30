@@ -47,29 +47,31 @@ jobs:
         with:
           path: ~/.agda-stdlib
           key: ${{ runner.os }}-agda-stdlib-v1.7.3
-          
+
       - name: Install Agda
         run: |
           set -e
           sudo apt-get update
           sudo apt-get install -y agda
-          
+
       - name: Install Agda Standard Library
         run: |
           set -e
           # Agda 2.6.3 is compatible with agda-stdlib v1.7.3
           AGDA_STDLIB_VERSION="v1.7.3"
-          
+
           # Clone agda-stdlib from GitHub if not cached
           if [ ! -d ~/.agda-stdlib ]; then
             git clone --branch $AGDA_STDLIB_VERSION --depth 1 https://github.com/agda/agda-stdlib.git ~/.agda-stdlib
           fi
-          
+
           # Register the library with Agda
           mkdir -p ~/.agda
-          echo "$HOME/.agda-stdlib/standard-library.agda-lib" >> ~/.agda/libraries
-          echo "standard-library" >> ~/.agda/defaults
-          
+          AGDA_LIB_PATH="$HOME/.agda-stdlib/standard-library.agda-lib"
+          # Only add if not already present
+          grep -qxF "$AGDA_LIB_PATH" ~/.agda/libraries 2>/dev/null || echo "$AGDA_LIB_PATH" >> ~/.agda/libraries
+          grep -qxF "standard-library" ~/.agda/defaults 2>/dev/null || echo "standard-library" >> ~/.agda/defaults
+
           # Verify installation
           echo "Installed agda-stdlib version: $AGDA_STDLIB_VERSION"
           ls -la ~/.agda-stdlib/standard-library.agda-lib
