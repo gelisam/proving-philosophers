@@ -35,12 +35,27 @@ class Print(Stmt):
         return f'println!("{self.msg}");'
 
 def generate_program():
-    """Generate the complete Rust dining philosophers program"""
+    """Generate the complete Rust dining philosophers program
     
-    # The AST simplifies common patterns:
-    # - Lock expands to .lock().unwrap()
-    # - Sleep expands to thread::sleep(std::time::Duration::from_millis(100))
+    This demonstrates how the AST simplifies common Rust patterns:
+    - Lock expands to .lock().unwrap()
+    - Sleep expands to thread::sleep(std::time::Duration::from_millis(100))
     
+    Example usage of AST classes:
+        lock1 = Lock("first_fork", "_guard1")
+        sleep = Sleep(100)
+        
+        lock1.generate()  # => "let _guard1 = first_fork.lock().unwrap();"
+        sleep.generate()  # => "thread::sleep(std::time::Duration::from_millis(100));"
+    """
+    
+    # Example: These AST nodes would be used in the actual Agda implementation
+    # to construct the program structure
+    lock_example = Lock("first_fork", "_guard1")
+    sleep_example = Sleep(100)
+    
+    # For this demonstration, we output the complete program directly
+    # In a full Agda implementation, these would be composed into a proper AST
     program = """use std::sync::{Arc, Mutex};
 use std::thread;
 

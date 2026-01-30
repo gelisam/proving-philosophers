@@ -41,6 +41,24 @@ The implementation uses the **ordered resource hierarchy** solution:
 
 ## Building and Running
 
+### Quick Start
+
+The project includes a Makefile for convenience:
+
+```bash
+# Run all tests
+make test
+
+# Build the Rust code
+make build
+
+# Run the dining philosophers
+make run
+
+# Run all quality checks (format, lint, test)
+make check
+```
+
 ### Rust Code
 
 ```bash
