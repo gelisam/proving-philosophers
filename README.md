@@ -6,8 +6,7 @@ A Rust + Agda project demonstrating the dining philosophers problem with code ge
 
 This project implements the dining philosophers problem where:
 - **Rust code** (`src/main.rs`): Implements the solution using ordered forks to prevent deadlock
-- **Agda code** (`agda/DiningPhilosophers.agda`): Defines an abstract syntax tree (AST) for simplified Rust operations
-- **Code Generator** (`agda/generate_rust.py`): Demonstrates the AST concept by generating the exact Rust code
+- **Agda code** (`agda/DiningPhilosophers.agda`): Defines an abstract syntax tree (AST) for simplified Rust operations and compiles to an executable that generates the exact Rust code
 
 ## Key Concepts
 
@@ -30,13 +29,13 @@ The implementation uses the **ordered resource hierarchy** solution:
 ```
 .
 ├── src/
-│   └── main.rs              # Rust implementation of dining philosophers
+│   └── main.rs                  # Rust implementation of dining philosophers
 ├── agda/
-│   ├── DiningPhilosophers.agda  # Agda AST definition
-│   └── generate_rust.py     # Python implementation demonstrating AST concept
-├── test_generation.sh       # Test that generated code matches actual code
-├── Cargo.toml              # Rust project configuration
-└── README.md               # This file
+│   ├── DiningPhilosophers.agda  # Agda AST definition and code generator
+│   └── DiningPhilosophers       # Compiled Agda executable (generated)
+├── test_generation.sh           # Test that generated code matches actual code
+├── Cargo.toml                   # Rust project configuration
+└── README.md                    # This file
 ```
 
 ## Building and Running
@@ -69,15 +68,30 @@ cargo build
 cargo run
 ```
 
+### Agda Code
+
+To compile the Agda code generator:
+
+```bash
+cd agda
+agda --compile --guardedness --ghc-flag=-Wwarn DiningPhilosophers.agda
+```
+
+This will create the `DiningPhilosophers` executable. To generate Rust code:
+
+```bash
+./agda/DiningPhilosophers > output.rs
+```
+
 ### Testing Code Generation
 
 ```bash
-# Test that the generator produces exactly the Rust code
+# Test that the Agda generator produces exactly the Rust code
 ./test_generation.sh
 ```
 
 This will:
-1. Run the code generator to produce Rust code
+1. Run the Agda executable to generate Rust code
 2. Compare it with the actual `src/main.rs`
 3. Report success if they match exactly
 
@@ -98,8 +112,8 @@ Sleep 100
 ## Requirements
 
 - Rust (edition 2021 or later)
-- Python 3 (for the code generator demonstration)
-- Agda (optional, for working with the formal AST definition)
+- Agda 2.6.3 or later (with standard library)
+- GHC (Haskell compiler, required for compiling Agda code)
 
 ## Testing
 
@@ -109,4 +123,4 @@ The project includes a test script that verifies the code generation works corre
 ./test_generation.sh
 ```
 
-This ensures that running the Agda code (or its Python equivalent) outputs exactly the Rust code in `src/main.rs`.
+This ensures that running the Agda-compiled executable outputs exactly the Rust code in `src/main.rs`.

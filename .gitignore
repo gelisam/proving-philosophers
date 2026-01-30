@@ -6,6 +6,9 @@ Cargo.lock
 # Agda
 *.agdai
 MAlonzo/
+_build/
+agda/DiningPhilosophers
+*.agda-lib
 
 # Python
 __pycache__/

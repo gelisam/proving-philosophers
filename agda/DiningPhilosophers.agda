@@ -4,6 +4,7 @@ open import Data.String using (String; _++_)
 open import Data.Nat using (ℕ)
 open import Data.Nat.Show using (show)
 open import Data.List using (List; []; _∷_; map; foldr)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import IO using (IO; Main; run; putStrLn)
 open import Function using (_∘_)
 
@@ -29,9 +30,15 @@ data Stmt : Set where
   IfElse : ℕ → List Stmt → List Stmt → Stmt
   -- Match statement (simplified for demonstration)
   -- In a full implementation, this would reference a runtime variable
-  Match : ℕ → List (ℕ × String × String) → Stmt
+  Match : ℕ → List (ℕ × (String × String)) → Stmt
+
+-- Helper to format a match case
+formatMatchCase : (ℕ × (String × String)) → String
+formatMatchCase p = let n = proj₁ p ; lr = proj₂ p ; left = proj₁ lr ; right = proj₂ lr in
+  show n ++ " => (Arc::clone(&" ++ left ++ "), Arc::clone(&" ++ right ++ ")),\n"
 
 -- Generate Rust code from AST
+{-# TERMINATING #-}
 generateStmt : Stmt → String
 generateStmt (VarDecl name expr) = 
   "let " ++ name ++ " = " ++ expr ++ ";"
@@ -55,9 +62,7 @@ generateStmt (IfElse i thenStmts elseStmts) =
   "};"
 generateStmt (Match i cases) = 
   "let (fork_left, fork_right) = match i {" ++ "\n" ++
-  foldr (λ { (n , left , right) acc → 
-    "    " ++ show n ++ " => (Arc::clone(&" ++ left ++ "), Arc::clone(&" ++ right ++ ")),\n" ++ acc 
-  }) "    _ => unreachable!(),\n};" cases
+  foldr (λ c acc → "            " ++ formatMatchCase c ++ acc) "            _ => unreachable!(),\n        };" cases
 
 -- Full program structure
 generateProgram : String
@@ -76,11 +81,11 @@ generateProgram =
   "\n" ++
   "    for i in 0..5 {" ++ "\n" ++
   "        " ++ generateStmt (Match 0 
-    ((0 , "fork0" , "fork1") ∷
-     (1 , "fork1" , "fork2") ∷
-     (2 , "fork2" , "fork3") ∷
-     (3 , "fork3" , "fork4") ∷
-     (4 , "fork0" , "fork4") ∷ [])) ++ "\n" ++
+    ((0 , ("fork0" , "fork1")) ∷
+     (1 , ("fork1" , "fork2")) ∷
+     (2 , ("fork2" , "fork3")) ∷
+     (3 , ("fork3" , "fork4")) ∷
+     (4 , ("fork0" , "fork4")) ∷ [])) ++ "\n" ++
   "\n" ++
   "        let handle = thread::spawn(move || {" ++ "\n" ++
   "            let (first_fork, second_fork) = if i == 4 {" ++ "\n" ++
