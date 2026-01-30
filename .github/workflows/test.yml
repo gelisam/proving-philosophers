@@ -50,17 +50,23 @@ jobs:
           path: ~/.agda-stdlib
           key: ${{ runner.os }}-agda-stdlib-${{ env.AGDA_STDLIB_VERSION }}
 
+      - name: Cache GHC
+        uses: actions/cache@v3
+        with:
+          path: ~/.ghcup
+          key: ${{ runner.os }}-ghcup-ghc-8.10.7
+
       - name: Install Agda
         run: |
           set -e
           sudo apt-get update
           sudo apt-get install -y agda
-          
+
           # Install GHC 8.10.7 via ghcup (compatible with Agda 2.6.3)
           # The default GHC 9.4.7 has deprecated '*' at type-level which causes compilation errors
           ghcup install ghc 8.10.7
           ghcup set ghc 8.10.7
-          
+
           # Verify GHC version
           ghc --version
 
