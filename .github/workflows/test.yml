@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      AGDA_STDLIB_VERSION: v1.7.3
 
     steps:
       - uses: actions/checkout@v3
@@ -46,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.agda-stdlib
-          key: ${{ runner.os }}-agda-stdlib-v1.7.3
+          key: ${{ runner.os }}-agda-stdlib-${{ env.AGDA_STDLIB_VERSION }}
 
       - name: Install Agda
         run: |
@@ -58,7 +60,6 @@ jobs:
         run: |
           set -e
           # Agda 2.6.3 is compatible with agda-stdlib v1.7.3
-          AGDA_STDLIB_VERSION="v1.7.3"
 
           # Clone agda-stdlib from GitHub if not cached
           if [ ! -d ~/.agda-stdlib ]; then
