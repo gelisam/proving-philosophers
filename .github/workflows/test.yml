@@ -62,7 +62,8 @@ jobs:
           # Agda 2.6.3 is compatible with agda-stdlib v1.7.3
 
           # Clone agda-stdlib from GitHub if not cached
-          if [ ! -d ~/.agda-stdlib ]; then
+          if [ ! -d ~/.agda-stdlib ] || [ -z "$(ls -A ~/.agda-stdlib 2>/dev/null)" ]; then
+            rm -rf ~/.agda-stdlib
             git clone --branch $AGDA_STDLIB_VERSION --depth 1 https://github.com/agda/agda-stdlib.git ~/.agda-stdlib
           fi
 
