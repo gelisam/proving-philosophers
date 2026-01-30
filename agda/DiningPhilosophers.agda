@@ -8,12 +8,16 @@ open import IO using (IO; Main; run; putStrLn)
 open import Function using (_∘_)
 
 -- AST for simplified Rust code
+-- Note: This is a simplified demonstration. A complete implementation would
+-- handle runtime variable references properly in the AST.
 data Stmt : Set where
   -- Variable declarations
   VarDecl : String → String → Stmt
   -- Lock operation (.lock().unwrap())
+  -- Expands a single Lock node to: let guard = fork.lock().unwrap();
   Lock : String → String → Stmt
-  -- Sleep operation (thread::sleep(std::time::Duration::from_millis(100)))
+  -- Sleep operation (thread::sleep(std::time::Duration::from_millis(...)))
+  -- Expands a single Sleep node to full thread::sleep with Duration
   Sleep : ℕ → Stmt
   -- Print statement
   Print : String → Stmt
@@ -21,9 +25,10 @@ data Stmt : Set where
   Spawn : List Stmt → Stmt
   -- Join thread
   Join : String → Stmt
-  -- If statement for conditional
+  -- If statement for conditional (simplified for demonstration)
   IfElse : ℕ → List Stmt → List Stmt → Stmt
-  -- Match statement
+  -- Match statement (simplified for demonstration)
+  -- In a full implementation, this would reference a runtime variable
   Match : ℕ → List (ℕ × String × String) → Stmt
 
 -- Generate Rust code from AST

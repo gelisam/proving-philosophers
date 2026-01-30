@@ -1,6 +1,6 @@
 # Proving Philosophers
 
-A Rust + Agda project demonstrating the dining philosophers problem with formally verified code generation.
+A Rust + Agda project demonstrating the dining philosophers problem with code generation from an abstract syntax tree.
 
 ## Overview
 

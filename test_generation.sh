@@ -3,7 +3,7 @@
 
 set -e
 
-REPO_ROOT="/home/runner/work/proving-philosophers/proving-philosophers"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GENERATED_FILE="/tmp/generated_main.rs"
 ACTUAL_FILE="$REPO_ROOT/src/main.rs"
 

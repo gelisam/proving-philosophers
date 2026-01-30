@@ -1,4 +1,4 @@
-.PHONY: all build test run clean check-format lint
+.PHONY: all build test test-generation test-rust run clean check-format lint check
 
 all: test
 

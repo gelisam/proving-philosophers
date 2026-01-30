@@ -47,15 +47,22 @@ def generate_program():
         
         lock1.generate()  # => "let _guard1 = first_fork.lock().unwrap();"
         sleep.generate()  # => "thread::sleep(std::time::Duration::from_millis(100));"
+    
+    Note: For simplicity, this demonstration outputs the complete program as a string.
+    A full implementation would build the entire program structure from AST nodes.
+    The AST classes above demonstrate the key concept: how single AST operations
+    expand to multiple Rust tokens/nodes (e.g., Lock → .lock().unwrap()).
     """
     
-    # Example: These AST nodes would be used in the actual Agda implementation
-    # to construct the program structure
-    lock_example = Lock("first_fork", "_guard1")
-    sleep_example = Sleep(100)
+    # Demonstrate AST usage by generating some key statements
+    lock1_stmt = Lock("first_fork", "_guard1").generate()
+    lock2_stmt = Lock("second_fork", "_guard2").generate()
+    sleep_stmt = Sleep(100).generate()
     
-    # For this demonstration, we output the complete program directly
-    # In a full Agda implementation, these would be composed into a proper AST
+    # These demonstrate how the AST expands:
+    # Lock → "let _guard1 = first_fork.lock().unwrap();"
+    # Sleep → "thread::sleep(std::time::Duration::from_millis(100));"
+    
     program = """use std::sync::{Arc, Mutex};
 use std::thread;
 
