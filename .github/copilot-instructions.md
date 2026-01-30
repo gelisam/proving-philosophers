@@ -89,18 +89,9 @@ make run-rust
 
 The GitHub Actions workflow (`.github/workflows/test.yml`) runs on push and PR to `main`:
 1. Installs Rust (latest stable)
-2. Sets up 5 caches (cargo registry, cargo index, cargo build, agda-stdlib, GHC)
-3. Installs Agda 2.6.3 and GHC 8.10.7 via ghcup
-4. Installs agda-stdlib v1.7.3
-5. Runs `make all` (tests both Agda and Rust)
-
-### Cache Strategy
-- **Cargo caches**: Invalidated when `Cargo.toml` changes
-- **Agda stdlib cache**: Invalidated when `AGDA_STDLIB_VERSION` changes
-- **GHC cache**: Invalidated when GHC version changes
-- Source code changes do NOT invalidate caches (incremental compilation)
-
-See `.github/CI_CACHING.md` for detailed caching information.
+2. Installs Agda 2.6.3 and GHC 8.10.7 via ghcup
+3. Installs agda-stdlib v1.7.3
+4. Runs `make all` (tests both Agda and Rust)
 
 ## Validation Steps
 
