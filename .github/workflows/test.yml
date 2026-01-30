@@ -45,7 +45,7 @@ jobs:
       - name: Install Agda
         run: |
           sudo apt-get update
-          sudo apt-get install -y agda libghc-agda-stdlib-dev
+          sudo apt-get install -y agda agda-stdlib
 
       - name: Run tests
         run: make all
