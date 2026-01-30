@@ -20,6 +20,10 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # Cache 1: Cargo Registry
+      # Contains downloaded crate metadata from crates.io
+      # Invalidated when: Cargo.toml changes (new dependencies or version updates)
+      # Restore keys: Falls back to any previous cargo registry cache if exact match not found
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
@@ -28,6 +32,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
+      # Cache 2: Cargo Index
+      # Contains the index of available crates from crates.io
+      # Invalidated when: Cargo.toml changes (new dependencies or version updates)
+      # Restore keys: Falls back to any previous cargo index cache if exact match not found
       - name: Cache cargo index
         uses: actions/cache@v3
         with:
@@ -36,6 +44,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-git-
 
+      # Cache 3: Cargo Build Output
+      # Contains compiled Rust artifacts (dependencies and project code)
+      # Invalidated when: Cargo.toml changes (new dependencies or version updates)
+      # Restore keys: Falls back to any previous build cache if exact match not found
+      # Note: Source code changes don't invalidate cache; incremental compilation reuses artifacts
       - name: Cache cargo build
         uses: actions/cache@v3
         with:
@@ -44,12 +57,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
 
+      # Cache 4: Agda Standard Library
+      # Contains the cloned agda-stdlib repository (v1.7.3)
+      # Invalidated when: AGDA_STDLIB_VERSION environment variable changes
+      # No restore keys: Exact version match required for compatibility
       - name: Cache Agda Standard Library
         uses: actions/cache@v3
         with:
           path: ~/.agda-stdlib
           key: ${{ runner.os }}-agda-stdlib-${{ env.AGDA_STDLIB_VERSION }}
 
+      # Cache 5: GHC Installation
+      # Contains the GHC 8.10.7 compiler installed via ghcup
+      # Invalidated when: GHC version changes (hardcoded to 8.10.7)
+      # No restore keys: Exact version match required for compilation compatibility
       - name: Cache GHC
         uses: actions/cache@v3
         with:
