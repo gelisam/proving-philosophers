@@ -42,26 +42,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
 
+      - name: Cache Agda Standard Library
+        uses: actions/cache@v3
+        with:
+          path: ~/.agda-stdlib
+          key: ${{ runner.os }}-agda-stdlib-v1.7.3
+          
       - name: Install Agda
         run: |
           set -e
           sudo apt-get update
-          sudo apt-get install -y agda agda-stdlib
-          mkdir -p ~/.agda
-          # Debug: list all files from agda-stdlib package
-          echo "Files in agda-stdlib package:"
-          dpkg -L agda-stdlib | head -20
-          # Find the actual location of the .agda-lib file
-          AGDA_STDLIB_PATH=$(dpkg -L agda-stdlib | grep "\.agda-lib$" || true)
-          if [ -z "$AGDA_STDLIB_PATH" ]; then
-            echo "Error: Could not find .agda-lib file in agda-stdlib package"
-            echo "Trying to find it manually..."
-            find /usr -name "*.agda-lib" 2>/dev/null | grep -i agda || true
-            exit 1
+          sudo apt-get install -y agda
+          
+      - name: Install Agda Standard Library
+        run: |
+          set -e
+          # Agda 2.6.3 is compatible with agda-stdlib v1.7.3
+          AGDA_STDLIB_VERSION="v1.7.3"
+          
+          # Clone agda-stdlib from GitHub if not cached
+          if [ ! -d ~/.agda-stdlib ]; then
+            git clone --branch $AGDA_STDLIB_VERSION --depth 1 https://github.com/agda/agda-stdlib.git ~/.agda-stdlib
           fi
-          echo "Found library at: $AGDA_STDLIB_PATH"
-          echo "$AGDA_STDLIB_PATH" >> ~/.agda/libraries
+          
+          # Register the library with Agda
+          mkdir -p ~/.agda
+          echo "$HOME/.agda-stdlib/standard-library.agda-lib" >> ~/.agda/libraries
           echo "standard-library" >> ~/.agda/defaults
+          
+          # Verify installation
+          echo "Installed agda-stdlib version: $AGDA_STDLIB_VERSION"
+          ls -la ~/.agda-stdlib/standard-library.agda-lib
 
       - name: Run tests
         run: make all
