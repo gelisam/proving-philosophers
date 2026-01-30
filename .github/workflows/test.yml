@@ -44,11 +44,16 @@ jobs:
 
       - name: Install Agda
         run: |
+          set -e
           sudo apt-get update
           sudo apt-get install -y agda agda-stdlib
           mkdir -p ~/.agda
           # Find the actual location of the standard-library.agda-lib file
           AGDA_STDLIB_PATH=$(dpkg -L agda-stdlib | grep "standard-library.agda-lib$")
+          if [ -z "$AGDA_STDLIB_PATH" ]; then
+            echo "Error: Could not find standard-library.agda-lib"
+            exit 1
+          fi
           echo "$AGDA_STDLIB_PATH" >> ~/.agda/libraries
           echo "standard-library" >> ~/.agda/defaults
 
