@@ -115,6 +115,15 @@ Sleep 100
 - Agda 2.6.3 or later (with standard library)
 - GHC (Haskell compiler, required for compiling Agda code)
 
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration. The CI workflow:
+- Runs all tests (both Agda and Rust)
+- Uses multiple caches to speed up builds
+- Installs compatible versions of Agda, agda-stdlib, and GHC
+
+For details about the caching strategy and how to optimize CI performance, see [.github/CI_CACHING.md](.github/CI_CACHING.md).
+
 ## Testing
 
 The project includes a test script that verifies the code generation works correctly:
