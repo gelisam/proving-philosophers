@@ -55,6 +55,14 @@ jobs:
           set -e
           sudo apt-get update
           sudo apt-get install -y agda
+          
+          # Install GHC 8.10.7 via ghcup (compatible with Agda 2.6.3)
+          # The default GHC 9.4.7 has deprecated '*' at type-level which causes compilation errors
+          ghcup install ghc 8.10.7
+          ghcup set ghc 8.10.7
+          
+          # Verify GHC version
+          ghc --version
 
       - name: Install Agda Standard Library
         run: |
