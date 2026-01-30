@@ -10,18 +10,3 @@ _build/
 agda/DiningPhilosophers
 *.agda-lib
 
-# Temporary files
-/tmp/
-*.tmp
-*.swp
-*.swo
-*~
-
-# IDE
-.vscode/
-.idea/
-*.iml
-
-# OS
-.DS_Store
-Thumbs.db
