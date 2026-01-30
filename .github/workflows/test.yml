@@ -48,12 +48,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y agda agda-stdlib
           mkdir -p ~/.agda
-          # Find the actual location of the standard-library.agda-lib file
-          AGDA_STDLIB_PATH=$(dpkg -L agda-stdlib | grep "standard-library.agda-lib$" || true)
+          # Debug: list all files from agda-stdlib package
+          echo "Files in agda-stdlib package:"
+          dpkg -L agda-stdlib | head -20
+          # Find the actual location of the .agda-lib file
+          AGDA_STDLIB_PATH=$(dpkg -L agda-stdlib | grep "\.agda-lib$" || true)
           if [ -z "$AGDA_STDLIB_PATH" ]; then
-            echo "Error: Could not find standard-library.agda-lib"
+            echo "Error: Could not find .agda-lib file in agda-stdlib package"
+            echo "Trying to find it manually..."
+            find /usr -name "*.agda-lib" 2>/dev/null | grep -i agda || true
             exit 1
           fi
+          echo "Found library at: $AGDA_STDLIB_PATH"
           echo "$AGDA_STDLIB_PATH" >> ~/.agda/libraries
           echo "standard-library" >> ~/.agda/defaults
 
