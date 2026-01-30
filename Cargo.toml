@@ -3,4 +3,6 @@ name = "proving-philosophers"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
+[[bin]]
+name = "proving-philosophers"
+path = "rust/main.rs"

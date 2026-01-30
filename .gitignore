@@ -1,12 +1,7 @@
 # Rust
-target/
+rust-build/
 Cargo.lock
-**/*.rs.bk
 
 # Agda
 *.agdai
-MAlonzo/
-_build/
-agda/DiningPhilosophers
-*.agda-lib
-
+agda-build/
