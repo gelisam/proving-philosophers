@@ -5,3 +5,4 @@ Cargo.lock
 # Agda
 *.agdai
 agda-build/
+generated.rs
