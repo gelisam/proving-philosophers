@@ -1,20 +1,11 @@
 #!/bin/bash
 # Test script to verify that the Agda code generator outputs exactly the Rust code
+# NOTE: This script is currently non-functional because the Agda code generation
+# feature has not yet been implemented. The DiningPhilosophers.agda file that
+# would generate the Rust code does not exist yet.
+#
+# This script is kept as a placeholder for future implementation.
 
-set -e
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GENERATED_FILE="/tmp/generated_main.rs"
-ACTUAL_FILE="$REPO_ROOT/src/main.rs"
-
-echo "Generating Rust code from Agda AST..."
-"$REPO_ROOT/agda/DiningPhilosophers" > "$GENERATED_FILE"
-
-echo "Comparing generated code with actual Rust code..."
-if diff -u "$ACTUAL_FILE" "$GENERATED_FILE"; then
-    echo "✓ SUCCESS: Generated code matches actual Rust code exactly!"
-    exit 0
-else
-    echo "✗ FAILURE: Generated code does not match actual Rust code"
-    exit 1
-fi
+echo "❌ Code generation test is not yet implemented."
+echo "The Agda code does not yet generate Rust code."
+exit 1

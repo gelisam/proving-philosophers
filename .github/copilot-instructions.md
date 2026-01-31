@@ -2,13 +2,13 @@
 
 ## Repository Overview
 
-This is a **Rust + Agda** project that demonstrates the dining philosophers problem with code generation from an abstract syntax tree. The project is small (~10 files) and uses:
+This is a **Rust + Agda** project that demonstrates the dining philosophers problem. The project is small (~10 files) and uses:
 - **Rust** (edition 2021) for the actual implementation
-- **Agda** (2.6.3) for defining an AST and generating Rust code
+- **Agda** (2.6.3) for proof assistance (aspirational - not yet implemented)
 - **GHC** (Haskell compiler) to compile Agda code
 - **Makefile** for build automation
 
-Key concept: The Agda code defines an AST for simplified Rust operations and compiles to an executable that generates the exact Rust code in `rust/main.rs`.
+**IMPORTANT: Despite what the README says, the Agda code does NOT yet generate Rust code. When making changes to the Rust code, there is NO need to update the Agda code.**
 
 ## Build and Test Commands
 
@@ -20,6 +20,7 @@ Key concept: The Agda code defines an AST for simplified Rust operations and com
 make all
 
 # Test Agda code generation (verifies generated code matches expected)
+# NOTE: Currently this just tests a "Hello, world!" placeholder
 make test-agda
 
 # Test Rust code
@@ -37,7 +38,7 @@ make clobber
 # Build Agda executable (takes 2-5 minutes)
 make build-agda
 
-# Run Agda executable (generates generated.rs)
+# Run Agda executable (currently outputs "Hello, world!")
 make run-agda
 
 # Build Rust code
@@ -52,6 +53,7 @@ make run-rust
 - **Agda Standard Library**: Requires agda-stdlib v1.7.3 (must match Agda 2.6.3)
 - **Build Times**: Building Agda from scratch takes 2-5 minutes on first run; subsequent runs are faster
 - **Test Validation**: `make test-agda` compares `generated.rs` with `rust/expected.rs` using `diff -u`
+- **Agda Status**: The Agda code currently only outputs "Hello, world!" - it does NOT yet generate the Rust code
 
 ## Project Structure
 
@@ -61,8 +63,7 @@ make run-rust
 │   ├── workflows/test.yml       # CI pipeline with 5 caching strategies
 │   └── CI_CACHING.md            # Detailed caching documentation
 ├── agda/
-│   ├── DiningPhilosophers.agda  # AST definition and code generator
-│   └── Main.agda                # Main Agda file (compiles to executable)
+│   └── Main.agda                # Main Agda file (currently outputs "Hello, world!")
 ├── agda-build/                  # Compiled Agda executable (generated)
 │   └── Main
 ├── rust/
@@ -77,8 +78,7 @@ make run-rust
 ### Key Files to Modify
 - **Rust code**: `rust/main.rs` (the actual implementation)
 - **Expected output**: `rust/expected.rs` (must match generated code in tests)
-- **Agda AST**: `agda/DiningPhilosophers.agda` (defines code generation)
-- **Agda main**: `agda/Main.agda` (compiles to executable)
+- **Agda main**: `agda/Main.agda` (currently a placeholder)
 
 ### Configuration Files
 - `Cargo.toml`: Rust package config (binary path is `rust/main.rs`)
@@ -100,15 +100,9 @@ Before committing changes:
 1. **Clean build**: Run `make clean` then `make all` to verify from scratch
 2. **Agda test**: Ensure `make test-agda` passes (generated code matches expected)
 3. **Rust test**: Ensure `make test-rust` passes
-4. **If modifying Agda**: Regenerate expected output with `./agda-build/Main > rust/expected.rs`
-5. **If modifying Rust**: Ensure changes are reflected in the Agda AST definition to maintain consistency between the two implementations
+4. **When modifying Rust code**: Changes to `rust/main.rs` do NOT require updating Agda code, since code generation is not yet implemented. Just ensure the Rust tests pass.
 
 ## Common Patterns
-
-### AST Examples
-The Agda AST simplifies Rust patterns:
-- `Lock "first_fork" "_guard1"` → `let _guard1 = first_fork.lock().unwrap();`
-- `Sleep 100` → `thread::sleep(std::time::Duration::from_millis(100));`
 
 ### Dining Philosophers Solution
 Uses **ordered resource hierarchy**:
