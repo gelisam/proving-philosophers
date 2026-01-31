@@ -1,0 +1,116 @@
+name: Setup Dependencies
+
+# This is a reusable workflow that can be called from other workflows
+# to avoid repeating dependency installation steps for each Copilot task
+on:
+  workflow_call:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      AGDA_STDLIB_VERSION: v1.7.3
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # Cache 1: Cargo Registry
+      # Contains downloaded crate metadata from crates.io
+      # Invalidated when: Cargo.toml changes (new dependencies or version updates)
+      # Restore keys: Falls back to any previous cargo registry cache if exact match not found
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      # Cache 2: Cargo Index
+      # Contains the index of available crates from crates.io
+      # Invalidated when: Cargo.toml changes (new dependencies or version updates)
+      # Restore keys: Falls back to any previous cargo index cache if exact match not found
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
+      # Cache 3: Cargo Build Output
+      # Contains compiled Rust artifacts (dependencies and project code)
+      # Invalidated when: Cargo.toml changes (new dependencies or version updates)
+      # Restore keys: Falls back to any previous build cache if exact match not found
+      # Note: Source code changes don't invalidate cache; incremental compilation reuses artifacts
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      # Cache 4: Agda Standard Library
+      # Contains the cloned agda-stdlib repository (v1.7.3)
+      # Invalidated when: AGDA_STDLIB_VERSION environment variable changes
+      # No restore keys: Exact version match required for compatibility
+      - name: Cache Agda Standard Library
+        uses: actions/cache@v3
+        with:
+          path: ~/.agda-stdlib
+          key: ${{ runner.os }}-agda-stdlib-${{ env.AGDA_STDLIB_VERSION }}
+
+      # Cache 5: GHC Installation
+      # Contains the GHC 8.10.7 compiler installed via ghcup
+      # Invalidated when: GHC version changes (hardcoded to 8.10.7)
+      # No restore keys: Exact version match required for compilation compatibility
+      - name: Cache GHC
+        uses: actions/cache@v3
+        with:
+          path: ~/.ghcup
+          key: ${{ runner.os }}-ghcup-ghc-8.10.7
+
+      - name: Install Agda
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y agda
+
+          # Install GHC 8.10.7 via ghcup (compatible with Agda 2.6.3)
+          # The default GHC 9.4.7 has deprecated '*' at type-level which causes compilation errors
+          ghcup install ghc 8.10.7
+          ghcup set ghc 8.10.7
+
+          # Verify GHC version
+          ghc --version
+
+      - name: Install Agda Standard Library
+        run: |
+          set -e
+          # Agda 2.6.3 is compatible with agda-stdlib v1.7.3
+
+          # Clone agda-stdlib from GitHub if not cached
+          if [ ! -d ~/.agda-stdlib ] || [ -z "$(ls -A ~/.agda-stdlib 2>/dev/null)" ]; then
+            rm -rf ~/.agda-stdlib
+            git clone --branch $AGDA_STDLIB_VERSION --depth 1 https://github.com/agda/agda-stdlib.git ~/.agda-stdlib
+          fi
+
+          # Register the library with Agda
+          mkdir -p ~/.agda
+          AGDA_LIB_PATH="$HOME/.agda-stdlib/standard-library.agda-lib"
+          # Only add if not already present
+          grep -qxF "$AGDA_LIB_PATH" ~/.agda/libraries 2>/dev/null || echo "$AGDA_LIB_PATH" >> ~/.agda/libraries
+          grep -qxF "standard-library" ~/.agda/defaults 2>/dev/null || echo "standard-library" >> ~/.agda/defaults
+
+          # Verify installation
+          echo "Installed agda-stdlib version: $AGDA_STDLIB_VERSION"
+          ls -la ~/.agda-stdlib/standard-library.agda-lib
+
+      - name: Run tests
+        run: make all
