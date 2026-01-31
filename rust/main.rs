@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
+use rand::Rng;
 
 fn main() {
     let fork0 = Arc::new(Mutex::new(()));
@@ -27,12 +28,20 @@ fn main() {
                 (fork_left, fork_right)
             };
 
-            let _guard1 = first_fork.lock().unwrap();
-            let _guard2 = second_fork.lock().unwrap();
+            let mut rng = rand::thread_rng();
+            loop {
+                let think_time = rng.gen_range(1..=10);
+                println!("Philosopher {} is thinking", i);
+                thread::sleep(std::time::Duration::from_secs(think_time));
 
-            println!("Philosopher {} is eating", i);
-            thread::sleep(std::time::Duration::from_millis(100));
-            println!("Philosopher {} is done eating", i);
+                let _guard1 = first_fork.lock().unwrap();
+                let _guard2 = second_fork.lock().unwrap();
+
+                let eat_time = rng.gen_range(1..=10);
+                println!("Philosopher {} is eating", i);
+                thread::sleep(std::time::Duration::from_secs(eat_time));
+                println!("Philosopher {} is done eating", i);
+            }
         });
 
         handles.push(handle);

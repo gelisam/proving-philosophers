@@ -17,6 +17,9 @@ data Stmt : Set where
   -- Lock operation (.lock().unwrap())
   -- Expands a single Lock node to: let guard = fork.lock().unwrap();
   Lock : String → String → Stmt
+  -- Sleep operation (thread::sleep(std::time::Duration::from_secs(...)))
+  -- Expands a single Sleep node to full thread::sleep with Duration
+  SleepSecs : ℕ → Stmt
   -- Sleep operation (thread::sleep(std::time::Duration::from_millis(...)))
   -- Expands a single Sleep node to full thread::sleep with Duration
   Sleep : ℕ → Stmt
@@ -31,6 +34,8 @@ data Stmt : Set where
   -- Match statement (simplified for demonstration)
   -- In a full implementation, this would reference a runtime variable
   Match : ℕ → List (ℕ × (String × String)) → Stmt
+  -- Loop statement (infinite loop)
+  Loop : List Stmt → Stmt
 
 -- Helper to format a match case
 formatMatchCase : (ℕ × (String × String)) → String
@@ -44,6 +49,8 @@ generateStmt (VarDecl name expr) =
   "let " ++ name ++ " = " ++ expr ++ ";"
 generateStmt (Lock fork guard) = 
   "let " ++ guard ++ " = " ++ fork ++ ".lock().unwrap();"
+generateStmt (SleepSecs secs) = 
+  "thread::sleep(std::time::Duration::from_secs(" ++ show secs ++ "));"
 generateStmt (Sleep millis) = 
   "thread::sleep(std::time::Duration::from_millis(" ++ show millis ++ "));"
 generateStmt (Print msg) = 
@@ -63,12 +70,17 @@ generateStmt (IfElse i thenStmts elseStmts) =
 generateStmt (Match i cases) = 
   "let (fork_left, fork_right) = match i {" ++ "\n" ++
   foldr (λ c acc → "            " ++ formatMatchCase c ++ acc) "            _ => unreachable!(),\n        };" cases
+generateStmt (Loop stmts) = 
+  "loop {" ++ "\n" ++
+  foldr (λ s acc → "    " ++ generateStmt s ++ "\n" ++ acc) "" stmts ++
+  "}"
 
 -- Full program structure
 generateProgram : String
 generateProgram = 
   "use std::sync::{Arc, Mutex};" ++ "\n" ++
   "use std::thread;" ++ "\n" ++
+  "use rand::Rng;" ++ "\n" ++
   "\n" ++
   "fn main() {" ++ "\n" ++
   "    let fork0 = Arc::new(Mutex::new(()));" ++ "\n" ++
@@ -94,12 +106,20 @@ generateProgram =
   "                (fork_left, fork_right)" ++ "\n" ++
   "            };" ++ "\n" ++
   "\n" ++
-  "            " ++ generateStmt (Lock "first_fork" "_guard1") ++ "\n" ++
-  "            " ++ generateStmt (Lock "second_fork" "_guard2") ++ "\n" ++
+  "            let mut rng = rand::thread_rng();" ++ "\n" ++
+  "            loop {" ++ "\n" ++
+  "                let think_time = rng.gen_range(1..=10);" ++ "\n" ++
+  "                println!(\"Philosopher {} is thinking\", i);" ++ "\n" ++
+  "                thread::sleep(std::time::Duration::from_secs(think_time));" ++ "\n" ++
   "\n" ++
-  "            println!(\"Philosopher {} is eating\", i);" ++ "\n" ++
-  "            " ++ generateStmt (Sleep 100) ++ "\n" ++
-  "            println!(\"Philosopher {} is done eating\", i);" ++ "\n" ++
+  "                " ++ generateStmt (Lock "first_fork" "_guard1") ++ "\n" ++
+  "                " ++ generateStmt (Lock "second_fork" "_guard2") ++ "\n" ++
+  "\n" ++
+  "                let eat_time = rng.gen_range(1..=10);" ++ "\n" ++
+  "                println!(\"Philosopher {} is eating\", i);" ++ "\n" ++
+  "                thread::sleep(std::time::Duration::from_secs(eat_time));" ++ "\n" ++
+  "                println!(\"Philosopher {} is done eating\", i);" ++ "\n" ++
+  "            }" ++ "\n" ++
   "        });" ++ "\n" ++
   "\n" ++
   "        handles.push(handle);" ++ "\n" ++
