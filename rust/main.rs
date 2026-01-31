@@ -1,6 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use std::thread;
 use rand::Rng;
+
+static FORK0: Mutex<()> = Mutex::new(());
+static FORK1: Mutex<()> = Mutex::new(());
+static FORK2: Mutex<()> = Mutex::new(());
+static FORK3: Mutex<()> = Mutex::new(());
+static FORK4: Mutex<()> = Mutex::new(());
 
 fn think_randomly(philosopher_id: usize) {
     let mut rng = rand::thread_rng();
@@ -18,68 +24,52 @@ fn eat_randomly(philosopher_id: usize) {
 }
 
 fn main() {
-    let fork0 = Arc::new(Mutex::new(()));
-    let fork1 = Arc::new(Mutex::new(()));
-    let fork2 = Arc::new(Mutex::new(()));
-    let fork3 = Arc::new(Mutex::new(()));
-    let fork4 = Arc::new(Mutex::new(()));
-
     // Philosopher 0: picks up fork0 then fork1
-    let fork0_p0 = Arc::clone(&fork0);
-    let fork1_p0 = Arc::clone(&fork1);
-    let handle0 = thread::spawn(move || {
+    let handle0 = thread::spawn(|| {
         loop {
             think_randomly(0);
-            let _guard1 = fork0_p0.lock().unwrap();
-            let _guard2 = fork1_p0.lock().unwrap();
+            let _guard1 = FORK0.lock().unwrap();
+            let _guard2 = FORK1.lock().unwrap();
             eat_randomly(0);
         }
     });
 
     // Philosopher 1: picks up fork1 then fork2
-    let fork1_p1 = Arc::clone(&fork1);
-    let fork2_p1 = Arc::clone(&fork2);
-    let handle1 = thread::spawn(move || {
+    let handle1 = thread::spawn(|| {
         loop {
             think_randomly(1);
-            let _guard1 = fork1_p1.lock().unwrap();
-            let _guard2 = fork2_p1.lock().unwrap();
+            let _guard1 = FORK1.lock().unwrap();
+            let _guard2 = FORK2.lock().unwrap();
             eat_randomly(1);
         }
     });
 
     // Philosopher 2: picks up fork2 then fork3
-    let fork2_p2 = Arc::clone(&fork2);
-    let fork3_p2 = Arc::clone(&fork3);
-    let handle2 = thread::spawn(move || {
+    let handle2 = thread::spawn(|| {
         loop {
             think_randomly(2);
-            let _guard1 = fork2_p2.lock().unwrap();
-            let _guard2 = fork3_p2.lock().unwrap();
+            let _guard1 = FORK2.lock().unwrap();
+            let _guard2 = FORK3.lock().unwrap();
             eat_randomly(2);
         }
     });
 
     // Philosopher 3: picks up fork3 then fork4
-    let fork3_p3 = Arc::clone(&fork3);
-    let fork4_p3 = Arc::clone(&fork4);
-    let handle3 = thread::spawn(move || {
+    let handle3 = thread::spawn(|| {
         loop {
             think_randomly(3);
-            let _guard1 = fork3_p3.lock().unwrap();
-            let _guard2 = fork4_p3.lock().unwrap();
+            let _guard1 = FORK3.lock().unwrap();
+            let _guard2 = FORK4.lock().unwrap();
             eat_randomly(3);
         }
     });
 
     // Philosopher 4: picks up fork4 then fork0 (reversed order to prevent deadlock)
-    let fork0_p4 = Arc::clone(&fork0);
-    let fork4_p4 = Arc::clone(&fork4);
-    let handle4 = thread::spawn(move || {
+    let handle4 = thread::spawn(|| {
         loop {
             think_randomly(4);
-            let _guard1 = fork4_p4.lock().unwrap();
-            let _guard2 = fork0_p4.lock().unwrap();
+            let _guard1 = FORK4.lock().unwrap();
+            let _guard2 = FORK0.lock().unwrap();
             eat_randomly(4);
         }
     });
