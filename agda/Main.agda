@@ -70,38 +70,34 @@ render-block (MkBlock stmts)
   = Block (map render-stmt stmts)
 
 render-threads : List Thread → Syntax
-render-threads []
-  = Block []
-render-threads (MkThread pid (MkBlock stmts) ∷ threads)
-  = Block (loopStart ∷ loopBody ∷ spawnClose ∷ restThreadsList threads)
+render-threads threads
+  = Block (go threads)
   where
-    handleName : String
-    handleName
-      = "handle" +++ show pid
-
-    loopStart : Syntax
-    loopStart
-      = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
-
-    loopBody : Syntax
-    loopBody
-      = Indent (Block 
-      ( Line "loop {"
-      ∷ Indent (render-block (MkBlock stmts))
-      ∷ Line "}"
-      ∷ [] ))
-
-    spawnClose : Syntax
-    spawnClose
-      = Line "});"
-
-    restThreadsList : List Thread → List Syntax
-    restThreadsList []
+    go : List Thread → List Syntax
+    go []
       = []
-    restThreadsList ts with render-threads ts
-    ... | Block xs = xs
-    ... | Line _ = []  -- unreachable
-    ... | Indent _ = []  -- unreachable
+    go (MkThread pid (MkBlock stmts) ∷ rest)
+      = spawnStart ∷ loopBody ∷ spawnClose ∷ go rest
+      where
+        handleName : String
+        handleName
+          = "handle" +++ show pid
+
+        spawnStart : Syntax
+        spawnStart
+          = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
+
+        loopBody : Syntax
+        loopBody
+          = Indent (Block 
+          ( Line "loop {"
+          ∷ Indent (render-block (MkBlock stmts))
+          ∷ Line "}"
+          ∷ [] ))
+
+        spawnClose : Syntax
+        spawnClose
+          = Line "});"
 
 
 -- static FORK_1_2: Mutex<()> = Mutex::new(());
