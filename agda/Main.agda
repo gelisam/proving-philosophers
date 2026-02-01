@@ -46,11 +46,8 @@ data Stmt : Set where
   LockFork
     : ℕ → ℕ → ℕ → Stmt  -- guard number, fork i, fork j
 
-data CodeBlock : Set where
-  MkBlock : List Stmt → CodeBlock
-
 data Thread : Set where
-  MkThread : ℕ → CodeBlock → Thread  -- philosopher id, block
+  MkThread : ℕ → List Stmt → Thread  -- philosopher id, block
 
 -- Render functions that produce Syntax
 render-stmt : Stmt → Syntax
@@ -65,8 +62,8 @@ render-stmt (LockFork g i j)
        +++ ".lock().unwrap();"
          )
 
-render-block : CodeBlock → Syntax
-render-block (MkBlock stmts)
+render-block : List Stmt → Syntax
+render-block stmts
   = Block (map render-stmt stmts)
 
 render-threads : List Thread → Syntax
@@ -76,7 +73,7 @@ render-threads threads
     go : List Thread → List Syntax
     go []
       = []
-    go (MkThread pid (MkBlock stmts) ∷ rest)
+    go (MkThread pid stmts ∷ rest)
       = spawnStart ∷ loopBody ∷ spawnClose ∷ go rest
       where
         handleName : String
@@ -91,7 +88,7 @@ render-threads threads
         loopBody
           = Indent (Block 
           ( Line "loop {"
-          ∷ Indent (render-block (MkBlock stmts))
+          ∷ Indent (render-block stmts)
           ∷ Line "}"
           ∷ [] ))
 
@@ -129,36 +126,36 @@ fork-declarations n
 -- Define the threads based on main.rs
 threads : List Thread
 threads =
-  MkThread 1 (MkBlock
+  MkThread 1
     ( ThinkRandomly 1
     ∷ LockFork 1 1 2
     ∷ LockFork 2 5 1
     ∷ EatRandomly 1
-    ∷ [] ))
-  ∷ MkThread 2 (MkBlock
+    ∷ [] )
+  ∷ MkThread 2
     ( ThinkRandomly 2
     ∷ LockFork 1 1 2
     ∷ LockFork 2 2 3
     ∷ EatRandomly 2
-    ∷ [] ))
-  ∷ MkThread 3 (MkBlock
+    ∷ [] )
+  ∷ MkThread 3
     ( ThinkRandomly 3
     ∷ LockFork 1 2 3
     ∷ LockFork 2 3 4
     ∷ EatRandomly 3
-    ∷ [] ))
-  ∷ MkThread 4 (MkBlock
+    ∷ [] )
+  ∷ MkThread 4
     ( ThinkRandomly 4
     ∷ LockFork 1 3 4
     ∷ LockFork 2 4 5
     ∷ EatRandomly 4
-    ∷ [] ))
-  ∷ MkThread 5 (MkBlock
+    ∷ [] )
+  ∷ MkThread 5
     ( ThinkRandomly 5
     ∷ LockFork 1 4 5
     ∷ LockFork 2 5 1
     ∷ EatRandomly 5
-    ∷ [] ))
+    ∷ [] )
   ∷ []
 
 -- Render join statements for each thread
