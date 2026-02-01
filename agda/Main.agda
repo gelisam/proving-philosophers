@@ -130,12 +130,67 @@ fork-declarations n
     go zero
       = []
 
-full-program : ℕ → Syntax
-full-program n = Block
+-- Define the threads based on main.rs
+threads : List Thread
+threads =
+  MkThread 1 (MkBlock
+    ( ThinkRandomly 1
+    ∷ LockFork 1 1 2
+    ∷ LockFork 2 5 1
+    ∷ EatRandomly 1
+    ∷ [] ))
+  ∷ MkThread 2 (MkBlock
+    ( ThinkRandomly 2
+    ∷ LockFork 1 1 2
+    ∷ LockFork 2 2 3
+    ∷ EatRandomly 2
+    ∷ [] ))
+  ∷ MkThread 3 (MkBlock
+    ( ThinkRandomly 3
+    ∷ LockFork 1 2 3
+    ∷ LockFork 2 3 4
+    ∷ EatRandomly 3
+    ∷ [] ))
+  ∷ MkThread 4 (MkBlock
+    ( ThinkRandomly 4
+    ∷ LockFork 1 3 4
+    ∷ LockFork 2 4 5
+    ∷ EatRandomly 4
+    ∷ [] ))
+  ∷ MkThread 5 (MkBlock
+    ( ThinkRandomly 5
+    ∷ LockFork 1 4 5
+    ∷ LockFork 2 5 1
+    ∷ EatRandomly 5
+    ∷ [] ))
+  ∷ []
+
+-- Render join statements for each thread
+render-joins : List Thread → Syntax
+render-joins [] = Block []
+render-joins (MkThread pid _ ∷ ts)
+  = Block (Line ("handle" +++ show pid +++ ".join().unwrap();") ∷ restJoins ts)
+  where
+    restJoins : List Thread → List Syntax
+    restJoins [] = []
+    restJoins xs with render-joins xs
+    ... | Block ys = ys
+    ... | Line _ = []  -- unreachable
+    ... | Indent _ = []  -- unreachable
+
+full-program : List Thread → Syntax
+full-program threads = Block
   ( header
   ∷ Line ""
-  ∷ fork-declarations n
+  ∷ fork-declarations 5
+  ∷ Line ""
+  ∷ Line "fn main() {"
+  ∷ Indent (Block
+      ( render-threads threads
+      ∷ render-joins threads
+      ∷ [] ))
+  ∷ Line "}"
   ∷ [] )
 
 main : Main
-main = run (putStr (Syntax.render (full-program 5)))
+main = run (putStr (Syntax.render (full-program threads)))

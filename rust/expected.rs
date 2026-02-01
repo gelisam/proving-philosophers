@@ -23,3 +23,51 @@ static FORK_2_3: Mutex<()> = Mutex::new(());
 static FORK_3_4: Mutex<()> = Mutex::new(());
 static FORK_4_5: Mutex<()> = Mutex::new(());
 static FORK_5_1: Mutex<()> = Mutex::new(());
+
+fn main() {
+    let handle1 = thread::spawn(|| {
+        loop {
+            think_randomly(1);
+            let _guard1 = FORK_1_2.lock().unwrap();
+            let _guard2 = FORK_5_1.lock().unwrap();
+            eat_randomly(1);
+        }
+    });
+    let handle2 = thread::spawn(|| {
+        loop {
+            think_randomly(2);
+            let _guard1 = FORK_1_2.lock().unwrap();
+            let _guard2 = FORK_2_3.lock().unwrap();
+            eat_randomly(2);
+        }
+    });
+    let handle3 = thread::spawn(|| {
+        loop {
+            think_randomly(3);
+            let _guard1 = FORK_2_3.lock().unwrap();
+            let _guard2 = FORK_3_4.lock().unwrap();
+            eat_randomly(3);
+        }
+    });
+    let handle4 = thread::spawn(|| {
+        loop {
+            think_randomly(4);
+            let _guard1 = FORK_3_4.lock().unwrap();
+            let _guard2 = FORK_4_5.lock().unwrap();
+            eat_randomly(4);
+        }
+    });
+    let handle5 = thread::spawn(|| {
+        loop {
+            think_randomly(5);
+            let _guard1 = FORK_4_5.lock().unwrap();
+            let _guard2 = FORK_5_1.lock().unwrap();
+            eat_randomly(5);
+        }
+    });
+    handle1.join().unwrap();
+    handle2.join().unwrap();
+    handle3.join().unwrap();
+    handle4.join().unwrap();
+    handle5.join().unwrap();
+}
