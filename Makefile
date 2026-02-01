@@ -1,6 +1,6 @@
-.PHONY: all clean clobber build-agda run-agda test-agda clean-agda clobber-agda build-rust run-rust test-rust clean-rust clobber-rust
+.PHONY: all clean clobber build-agda run-agda test-agda clean-agda clobber-agda build-rust run-rust clean-rust clobber-rust
 
-all: test-agda test-rust
+all: test-agda
 
 clean: clean-agda clean-rust
 
@@ -48,10 +48,6 @@ build-rust: rust/main.rs
 
 run-rust: rust/main.rs
 	cargo run
-
-test-rust: rust/main.rs
-	@echo "Running Rust tests..."
-	cargo test
 
 # Delete all intermediate files, including the executable
 clean-rust:

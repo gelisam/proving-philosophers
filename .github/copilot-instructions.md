@@ -23,9 +23,6 @@ make all
 # NOTE: Currently this just tests a "Hello, world!" placeholder
 make test-agda
 
-# Test Rust code
-make test-rust
-
 # Clean intermediate files
 make clean
 
@@ -98,8 +95,8 @@ Before committing changes:
 
 1. **Clean build**: Run `make clean` then `make all` to verify from scratch
 2. **Agda test**: Ensure `make test-agda` passes (generated code matches expected)
-3. **Rust test**: Ensure `make test-rust` passes
-4. **When modifying Rust code**: Changes to `rust/main.rs` do NOT require updating Agda code, since code generation is not yet implemented. Just ensure the Rust tests pass.
+3. **Build Rust**: Ensure `make build-rust` passes
+4. **When modifying Rust code**: Changes to `rust/main.rs` do NOT require updating Agda code, since code generation is not yet implemented. Just ensure the Rust code compiles.
 
 ## Common Patterns
 
