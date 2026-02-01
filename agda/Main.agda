@@ -8,33 +8,34 @@ open import Data.String.Base using (String)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 open import IO.Base using (Main; run)
 open import IO.Finite using (putStr)
+open import Syntax using (Syntax; Line; Block; Indent)
 
-header : String
-header =
-  "use std::sync::Mutex;\n\
-  \use std::thread;\n\
-  \use rand::Rng;\n\
-  \\n\
-  \fn think_randomly(philosopher_id: usize) {\n\
-  \    let mut rng = rand::thread_rng();\n\
-  \    let think_time = rng.gen_range(1..=10);\n\
-  \    println!(\"Philosopher {} is thinking for {} seconds...\", philosopher_id, think_time);\n\
-  \    thread::sleep(std::time::Duration::from_secs(think_time));\n\
-  \    println!(\"Philosopher {} is done thinking.\", philosopher_id);\n\
-  \}\n\
-  \\n\
-  \fn eat_randomly(philosopher_id: usize) {\n\
-  \    let mut rng = rand::thread_rng();\n\
-  \    let eat_time = rng.gen_range(1..=10);\n\
-  \    println!(\"Philosopher {} is eating for {} seconds...\", philosopher_id, eat_time);\n\
-  \    thread::sleep(std::time::Duration::from_secs(eat_time));\n\
-  \    println!(\"Philosopher {} is done eating.\", philosopher_id);\n\
-  \}\n"
-
--- Helper function to create indentation
-indent : ℕ → String
-indent zero = ""
-indent (suc n) = "    " +++ indent n
+header : Syntax
+header = Block
+  ( Line "use std::sync::Mutex;"
+  ∷ Line "use std::thread;"
+  ∷ Line "use rand::Rng;"
+  ∷ Line ""
+  ∷ Line "fn think_randomly(philosopher_id: usize) {"
+  ∷ Indent (Block
+      ( Line "let mut rng = rand::thread_rng();"
+      ∷ Line "let think_time = rng.gen_range(1..=10);"
+      ∷ Line "println!(\"Philosopher {} is thinking for {} seconds...\", philosopher_id, think_time);"
+      ∷ Line "thread::sleep(std::time::Duration::from_secs(think_time));"
+      ∷ Line "println!(\"Philosopher {} is done thinking.\", philosopher_id);"
+      ∷ [] ))
+  ∷ Line "}"
+  ∷ Line ""
+  ∷ Line "fn eat_randomly(philosopher_id: usize) {"
+  ∷ Indent (Block
+      ( Line "let mut rng = rand::thread_rng();"
+      ∷ Line "let eat_time = rng.gen_range(1..=10);"
+      ∷ Line "println!(\"Philosopher {} is eating for {} seconds...\", philosopher_id, eat_time);"
+      ∷ Line "thread::sleep(std::time::Duration::from_secs(eat_time));"
+      ∷ Line "println!(\"Philosopher {} is done eating.\", philosopher_id);"
+      ∷ [] ))
+  ∷ Line "}"
+  ∷ [] )
 
 -- Data types for representing Rust code structure
 data Stmt : Set where
@@ -42,79 +43,79 @@ data Stmt : Set where
   EatRandomly : ℕ → Stmt
   LockFork : ℕ → ℕ → ℕ → Stmt  -- guard number, fork i, fork j
 
-data Block : Set where
-  MkBlock : List Stmt → Block
+data CodeBlock : Set where
+  MkBlock : List Stmt → CodeBlock
 
 data Thread : Set where
-  MkThread : ℕ → Block → Thread  -- philosopher id, block
+  MkThread : ℕ → CodeBlock → Thread  -- philosopher id, block
 
--- Render functions that produce List String with indentation
-render-stmt : ℕ → Stmt → List String
-render-stmt ind (ThinkRandomly n) = (indent ind +++ "think_randomly(" +++ show n +++ ");\n") ∷ []
-render-stmt ind (EatRandomly n) = (indent ind +++ "eat_randomly(" +++ show n +++ ");\n") ∷ []
-render-stmt ind (LockFork g i j) = 
-  (indent ind +++ "let _guard" +++ show g +++ " = FORK_" +++ show i +++ "_" +++ show j +++ ".lock().unwrap();\n") ∷ []
+-- Render functions that produce Syntax
+render-stmt : Stmt → Syntax
+render-stmt (ThinkRandomly n) = Line ("think_randomly(" +++ show n +++ ");")
+render-stmt (EatRandomly n) = Line ("eat_randomly(" +++ show n +++ ");")
+render-stmt (LockFork g i j) = 
+  Line ("let _guard" +++ show g +++ " = FORK_" +++ show i +++ "_" +++ show j +++ ".lock().unwrap();")
 
-render-block : ℕ → Block → List String
-render-block ind (MkBlock stmts) = concat (map (render-stmt ind) stmts)
+render-block : CodeBlock → Syntax
+render-block (MkBlock stmts) = Block (map render-stmt stmts)
 
-render-threads : ℕ → List Thread → List String
-render-threads ind [] = []
-render-threads ind (MkThread pid (MkBlock stmts) ∷ threads) =
-  (loopStart ∷ loopOpen ∷ []) ++ stmtLines ++ (loopClose ∷ spawnClose ∷ restThreads)
+render-threads : List Thread → Syntax
+render-threads [] = Block []
+render-threads (MkThread pid (MkBlock stmts) ∷ threads) =
+  Block (loopStart ∷ loopBody ∷ spawnClose ∷ restThreadsList threads)
   where
     handleName : String
     handleName = "handle" +++ show pid
-    loopStart : String
-    loopStart = indent ind +++ "let " +++ handleName +++ " = thread::spawn(|| {\n"
-    loopOpen : String
-    loopOpen = indent (suc ind) +++ "loop {\n"
-    stmtLines : List String
-    stmtLines = render-block (suc (suc ind)) (MkBlock stmts)
-    loopClose : String
-    loopClose = indent (suc ind) +++ "}\n"
-    spawnClose : String
-    spawnClose = indent ind +++ "});\n"
-    restThreads : List String
-    restThreads = render-threads ind threads
+    loopStart : Syntax
+    loopStart = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
+    loopBody : Syntax
+    loopBody = Indent (Block 
+      ( Line "loop {"
+      ∷ Indent (render-block (MkBlock stmts))
+      ∷ Line "}"
+      ∷ [] ))
+    spawnClose : Syntax
+    spawnClose = Line "});"
+    restThreadsList : List Thread → List Syntax
+    restThreadsList [] = []
+    restThreadsList ts with render-threads ts
+    ... | Block xs = xs
+    ... | Line _ = []  -- unreachable
+    ... | Indent _ = []  -- unreachable
 
 
--- Renamed from fork-declaration to indicate it produces a String (not List String)
 -- static FORK_1_2: Mutex<()> = Mutex::new(());
-render-fork-declaration-string : ℕ → ℕ → String
-render-fork-declaration-string i j
-    = "static FORK_" +++ show i
-              +++ "_" +++ show j
-   +++ ": Mutex<()> = Mutex::new(());\n"
+render-fork-declaration : ℕ → ℕ → Syntax
+render-fork-declaration i j
+    = Line ("static FORK_" +++ show i
+               +++ "_" +++ show j
+    +++ ": Mutex<()> = Mutex::new(());")
 
 -- static FORK_1_2: Mutex<()> = Mutex::new(());
 -- static FORK_2_3: Mutex<()> = Mutex::new(());
 -- static FORK_3_1: Mutex<()> = Mutex::new(());
-fork-declarations : ℕ → List String
+fork-declarations : ℕ → Syntax
 fork-declarations n
-  = reverse
-  ( render-fork-declaration-string n 1
+  = Block (reverse
+  ( render-fork-declaration n 1
   ∷ go n
-  )
+  ))
   where
-    go : ℕ → List String
+    go : ℕ → List Syntax
     go i@(suc i-1@(suc _))
-      = render-fork-declaration-string i-1 i
+      = render-fork-declaration i-1 i
       ∷ go i-1
     go (suc zero)
       = []
     go zero
       = []
 
-concat-strings : List String → String
-concat-strings []       = ""
-concat-strings (s ∷ ss) = s +++ concat-strings ss
-
-full-program : ℕ → String
-full-program n
-  = header
- +++ "\n"
- +++ concat-strings (fork-declarations n)
+full-program : ℕ → Syntax
+full-program n = Block
+  ( header
+  ∷ Line ""
+  ∷ fork-declarations n
+  ∷ [] )
 
 main : Main
-main = run (putStr (full-program 5))
+main = run (putStr (Syntax.render (full-program 5)))
