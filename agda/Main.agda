@@ -39,9 +39,12 @@ header = Block
 
 -- Data types for representing Rust code structure
 data Stmt : Set where
-  ThinkRandomly : ℕ → Stmt
-  EatRandomly : ℕ → Stmt
-  LockFork : ℕ → ℕ → ℕ → Stmt  -- guard number, fork i, fork j
+  ThinkRandomly
+    : ℕ → Stmt
+  EatRandomly
+    : ℕ → Stmt
+  LockFork
+    : ℕ → ℕ → ℕ → Stmt  -- guard number, fork i, fork j
 
 data CodeBlock : Set where
   MkBlock : List Stmt → CodeBlock
@@ -51,33 +54,50 @@ data Thread : Set where
 
 -- Render functions that produce Syntax
 render-stmt : Stmt → Syntax
-render-stmt (ThinkRandomly n) = Line ("think_randomly(" +++ show n +++ ");")
-render-stmt (EatRandomly n) = Line ("eat_randomly(" +++ show n +++ ");")
-render-stmt (LockFork g i j) = 
-  Line ("let _guard" +++ show g +++ " = FORK_" +++ show i +++ "_" +++ show j +++ ".lock().unwrap();")
+render-stmt (ThinkRandomly n)
+  = Line ("think_randomly(" +++ show n +++ ");")
+render-stmt (EatRandomly n)
+  = Line ("eat_randomly(" +++ show n +++ ");")
+render-stmt (LockFork g i j)
+  = Line ( "let _guard" +++ show g
+       +++ " = FORK_" +++ show i
+              +++ "_" +++ show j
+       +++ ".lock().unwrap();"
+         )
 
 render-block : CodeBlock → Syntax
-render-block (MkBlock stmts) = Block (map render-stmt stmts)
+render-block (MkBlock stmts)
+  = Block (map render-stmt stmts)
 
 render-threads : List Thread → Syntax
-render-threads [] = Block []
-render-threads (MkThread pid (MkBlock stmts) ∷ threads) =
-  Block (loopStart ∷ loopBody ∷ spawnClose ∷ restThreadsList threads)
+render-threads []
+  = Block []
+render-threads (MkThread pid (MkBlock stmts) ∷ threads)
+  = Block (loopStart ∷ loopBody ∷ spawnClose ∷ restThreadsList threads)
   where
     handleName : String
-    handleName = "handle" +++ show pid
+    handleName
+      = "handle" +++ show pid
+
     loopStart : Syntax
-    loopStart = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
+    loopStart
+      = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
+
     loopBody : Syntax
-    loopBody = Indent (Block 
+    loopBody
+      = Indent (Block 
       ( Line "loop {"
       ∷ Indent (render-block (MkBlock stmts))
       ∷ Line "}"
       ∷ [] ))
+
     spawnClose : Syntax
-    spawnClose = Line "});"
+    spawnClose
+      = Line "});"
+
     restThreadsList : List Thread → List Syntax
-    restThreadsList [] = []
+    restThreadsList []
+      = []
     restThreadsList ts with render-threads ts
     ... | Block xs = xs
     ... | Line _ = []  -- unreachable
