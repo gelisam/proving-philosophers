@@ -57,7 +57,7 @@ make run-rust
 ```
 .
 ├── .github/
-│   ├── workflows/test.yml       # CI pipeline with 5 caching strategies
+│   ├── workflows/test.yml       # CI pipeline with 6 caching strategies
 │   └── CI_CACHING.md            # Detailed caching documentation
 ├── agda/
 │   └── Main.agda                # Main Agda file (currently outputs "Hello, world!")

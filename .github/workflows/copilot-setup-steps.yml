@@ -76,6 +76,18 @@ jobs:
           path: ~/.ghcup
           key: ${{ runner.os }}-ghcup-ghc-8.10.7
 
+      # Cache 6: Compiled Agda Artifacts
+      # Contains compiled Agda interface files (.agdai) from the standard library
+      # These are generated when Agda compiles code that uses the standard library
+      # Caching these significantly speeds up subsequent compilations (saves 2-5 minutes)
+      # Invalidated when: AGDA_STDLIB_VERSION changes (different stdlib version)
+      # No restore keys: Exact version match required for compatibility
+      - name: Cache Compiled Agda Artifacts
+        uses: actions/cache@v3
+        with:
+          path: ~/.agda
+          key: ${{ runner.os }}-agda-compiled-${{ env.AGDA_STDLIB_VERSION }}
+
       - name: Install Agda
         run: |
           set -e
@@ -84,10 +96,17 @@ jobs:
 
           # Install GHC 8.10.7 via ghcup (compatible with Agda 2.6.3)
           # The default GHC 9.4.7 has deprecated '*' at type-level which causes compilation errors
-          ghcup install ghc 8.10.7
-          ghcup set ghc 8.10.7
+          if ! ghc --version 2>/dev/null | grep -q "8.10.7"; then
+            echo "Installing GHC 8.10.7 via ghcup..."
+            ghcup install ghc 8.10.7
+            ghcup set ghc 8.10.7
+          else
+            echo "GHC 8.10.7 already installed (cached)"
+          fi
 
-          # Verify GHC version
+          # Verify versions
+          echo "Final versions:"
+          agda --version
           ghc --version
 
       - name: Install Agda Standard Library
