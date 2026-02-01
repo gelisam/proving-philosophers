@@ -11,14 +11,14 @@ static FORK_5_1: Mutex<()> = Mutex::new(());
 fn think_randomly(philosopher_id: usize) {
     let mut rng = rand::thread_rng();
     let think_time = rng.gen_range(1..=10);
-    println!("Philosopher {} is thinking", philosopher_id);
+    println!("Philosopher {} is thinking for {} seconds...", philosopher_id, think_time);
     thread::sleep(std::time::Duration::from_secs(think_time));
 }
 
 fn eat_randomly(philosopher_id: usize) {
     let mut rng = rand::thread_rng();
     let eat_time = rng.gen_range(1..=10);
-    println!("Philosopher {} is eating", philosopher_id);
+    println!("Philosopher {} is eating for {} seconds...", philosopher_id, eat_time);
     thread::sleep(std::time::Duration::from_secs(eat_time));
     println!("Philosopher {} is done eating", philosopher_id);
 }
