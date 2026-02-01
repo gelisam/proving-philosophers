@@ -17,3 +17,9 @@ fn eat_randomly(philosopher_id: usize) {
     thread::sleep(std::time::Duration::from_secs(eat_time));
     println!("Philosopher {} is done eating.", philosopher_id);
 }
+
+static FORK_1_2: Mutex<()> = Mutex::new(());
+static FORK_2_3: Mutex<()> = Mutex::new(());
+static FORK_3_4: Mutex<()> = Mutex::new(());
+static FORK_4_5: Mutex<()> = Mutex::new(());
+static FORK_5_1: Mutex<()> = Mutex::new(());
