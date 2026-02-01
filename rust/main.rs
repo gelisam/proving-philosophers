@@ -24,52 +24,52 @@ fn eat_randomly(philosopher_id: usize) {
 }
 
 fn main() {
-    // Philosopher 1: picks up FORK_1_2 then FORK_2_3
+    // Philosopher 1: picks up FORK_1_2 then FORK_5_1 (reversed order to prevent deadlock)
     let handle1 = thread::spawn(|| {
         loop {
             think_randomly(1);
             let _guard1 = FORK_1_2.lock().unwrap();
-            let _guard2 = FORK_2_3.lock().unwrap();
+            let _guard2 = FORK_5_1.lock().unwrap();
             eat_randomly(1);
         }
     });
 
-    // Philosopher 2: picks up FORK_2_3 then FORK_3_4
+    // Philosopher 2: picks up FORK_1_2 then FORK_2_3
     let handle2 = thread::spawn(|| {
         loop {
             think_randomly(2);
-            let _guard1 = FORK_2_3.lock().unwrap();
-            let _guard2 = FORK_3_4.lock().unwrap();
+            let _guard1 = FORK_1_2.lock().unwrap();
+            let _guard2 = FORK_2_3.lock().unwrap();
             eat_randomly(2);
         }
     });
 
-    // Philosopher 3: picks up FORK_3_4 then FORK_4_5
+    // Philosopher 3: picks up FORK_2_3 then FORK_3_4
     let handle3 = thread::spawn(|| {
         loop {
             think_randomly(3);
-            let _guard1 = FORK_3_4.lock().unwrap();
-            let _guard2 = FORK_4_5.lock().unwrap();
+            let _guard1 = FORK_2_3.lock().unwrap();
+            let _guard2 = FORK_3_4.lock().unwrap();
             eat_randomly(3);
         }
     });
 
-    // Philosopher 4: picks up FORK_4_5 then FORK_5_1
+    // Philosopher 4: picks up FORK_3_4 then FORK_4_5
     let handle4 = thread::spawn(|| {
         loop {
             think_randomly(4);
-            let _guard1 = FORK_4_5.lock().unwrap();
-            let _guard2 = FORK_5_1.lock().unwrap();
+            let _guard1 = FORK_3_4.lock().unwrap();
+            let _guard2 = FORK_4_5.lock().unwrap();
             eat_randomly(4);
         }
     });
 
-    // Philosopher 5: picks up FORK_5_1 then FORK_1_2 (reversed order to prevent deadlock)
+    // Philosopher 5: picks up FORK_4_5 then FORK_5_1
     let handle5 = thread::spawn(|| {
         loop {
             think_randomly(5);
-            let _guard1 = FORK_5_1.lock().unwrap();
-            let _guard2 = FORK_1_2.lock().unwrap();
+            let _guard1 = FORK_4_5.lock().unwrap();
+            let _guard2 = FORK_5_1.lock().unwrap();
             eat_randomly(5);
         }
     });
