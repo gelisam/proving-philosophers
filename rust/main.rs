@@ -2,11 +2,11 @@ use std::sync::Mutex;
 use std::thread;
 use rand::Rng;
 
-static FORK0: Mutex<()> = Mutex::new(());
-static FORK1: Mutex<()> = Mutex::new(());
-static FORK2: Mutex<()> = Mutex::new(());
-static FORK3: Mutex<()> = Mutex::new(());
-static FORK4: Mutex<()> = Mutex::new(());
+static FORK_1_2: Mutex<()> = Mutex::new(());
+static FORK_2_3: Mutex<()> = Mutex::new(());
+static FORK_3_4: Mutex<()> = Mutex::new(());
+static FORK_4_5: Mutex<()> = Mutex::new(());
+static FORK_5_1: Mutex<()> = Mutex::new(());
 
 fn think_randomly(philosopher_id: usize) {
     let mut rng = rand::thread_rng();
@@ -24,59 +24,59 @@ fn eat_randomly(philosopher_id: usize) {
 }
 
 fn main() {
-    // Philosopher 0: picks up fork0 then fork1
-    let handle0 = thread::spawn(|| {
-        loop {
-            think_randomly(0);
-            let _guard1 = FORK0.lock().unwrap();
-            let _guard2 = FORK1.lock().unwrap();
-            eat_randomly(0);
-        }
-    });
-
-    // Philosopher 1: picks up fork1 then fork2
+    // Philosopher 1: picks up FORK_1_2 then FORK_2_3
     let handle1 = thread::spawn(|| {
         loop {
             think_randomly(1);
-            let _guard1 = FORK1.lock().unwrap();
-            let _guard2 = FORK2.lock().unwrap();
+            let _guard1 = FORK_1_2.lock().unwrap();
+            let _guard2 = FORK_2_3.lock().unwrap();
             eat_randomly(1);
         }
     });
 
-    // Philosopher 2: picks up fork2 then fork3
+    // Philosopher 2: picks up FORK_2_3 then FORK_3_4
     let handle2 = thread::spawn(|| {
         loop {
             think_randomly(2);
-            let _guard1 = FORK2.lock().unwrap();
-            let _guard2 = FORK3.lock().unwrap();
+            let _guard1 = FORK_2_3.lock().unwrap();
+            let _guard2 = FORK_3_4.lock().unwrap();
             eat_randomly(2);
         }
     });
 
-    // Philosopher 3: picks up fork3 then fork4
+    // Philosopher 3: picks up FORK_3_4 then FORK_4_5
     let handle3 = thread::spawn(|| {
         loop {
             think_randomly(3);
-            let _guard1 = FORK3.lock().unwrap();
-            let _guard2 = FORK4.lock().unwrap();
+            let _guard1 = FORK_3_4.lock().unwrap();
+            let _guard2 = FORK_4_5.lock().unwrap();
             eat_randomly(3);
         }
     });
 
-    // Philosopher 4: picks up fork4 then fork0 (reversed order to prevent deadlock)
+    // Philosopher 4: picks up FORK_4_5 then FORK_5_1
     let handle4 = thread::spawn(|| {
         loop {
             think_randomly(4);
-            let _guard1 = FORK4.lock().unwrap();
-            let _guard2 = FORK0.lock().unwrap();
+            let _guard1 = FORK_4_5.lock().unwrap();
+            let _guard2 = FORK_5_1.lock().unwrap();
             eat_randomly(4);
         }
     });
 
-    handle0.join().unwrap();
+    // Philosopher 5: picks up FORK_5_1 then FORK_1_2 (reversed order to prevent deadlock)
+    let handle5 = thread::spawn(|| {
+        loop {
+            think_randomly(5);
+            let _guard1 = FORK_5_1.lock().unwrap();
+            let _guard2 = FORK_1_2.lock().unwrap();
+            eat_randomly(5);
+        }
+    });
+
     handle1.join().unwrap();
     handle2.join().unwrap();
     handle3.join().unwrap();
     handle4.join().unwrap();
+    handle5.join().unwrap();
 }
