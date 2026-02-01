@@ -24,12 +24,12 @@ fn eat_randomly(philosopher_id: usize) {
 }
 
 fn main() {
-    // Philosopher 1: picks up FORK_5_1 then FORK_1_2 (reversed order to prevent deadlock)
+    // Philosopher 1: picks up FORK_1_2 then FORK_5_1 (reversed order to prevent deadlock)
     let handle1 = thread::spawn(|| {
         loop {
             think_randomly(1);
-            let _guard1 = FORK_5_1.lock().unwrap();
-            let _guard2 = FORK_1_2.lock().unwrap();
+            let _guard1 = FORK_1_2.lock().unwrap();
+            let _guard2 = FORK_5_1.lock().unwrap();
             eat_randomly(1);
         }
     });
