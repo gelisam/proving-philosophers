@@ -1,12 +1,17 @@
 {-# OPTIONS --guardedness #-}
 module TrustedBase.RuntimeModel where
 
-open import Data.List.Base using (List)
-open import Data.Maybe.Base using (Maybe)
-open import Data.Vec using (Vec)
+open import Data.Bool.Base using (Bool; true; false; _∧_; _∨_; not; if_then_else_)
+open import Data.List.Base using (List; []; _∷_; map; filter; all; any; _++_; length)
+open import Data.Maybe.Base using (Maybe; just; nothing)
+open import Data.Nat using (ℕ; zero; suc; _≡ᵇ_)
+open import Data.Vec using (Vec; []; _∷_; toList)
+open import Function.Base using (id)
 
-open import TrustedBase.Fork using (Fork)
-open import TrustedBase.Stmt using (Stmt)
+open import TrustedBase.Fork using (Fork; MkFork)
+open import TrustedBase.Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
+open import TrustedBase.Program using (Program; MkProgram)
+open import TrustedBase.Thread using (Thread; MkThread)
 
 -- Represents what condition a thread is waiting for
 data WaitingCondition : Set where
@@ -15,10 +20,14 @@ data WaitingCondition : Set where
 
 -- Represents the state of a single thread
 record ThreadState : Set where
+  constructor MkThreadState
   field
     acquiredForks : List Fork
     waiting : Maybe WaitingCondition
     restOfLoop : List Stmt
+    fullLoop : List Stmt  -- Store the original loop for restarting
+
+open ThreadState
 
 -- Represents the state of the entire program with n threads
 ProgramState : (n : _) → Set
@@ -32,6 +41,137 @@ record Tree (A : Set) : Set where
     value : A
     children : List (Tree A)
 
+open Tree
+
 -- Represents all possible traces of program execution
 PossibleTraces : (n : _) → Set
 PossibleTraces n = Tree (ProgramState n)
+
+-- Helper: Check if two forks are equal
+_fork≡_ : Fork → Fork → Bool
+(MkFork i1 j1) fork≡ (MkFork i2 j2) = (i1 ≡ᵇ i2) ∧ (j1 ≡ᵇ j2)
+
+-- Helper: Check if a fork is in a list of forks
+fork-in-list : Fork → List Fork → Bool
+fork-in-list f [] = false
+fork-in-list f (x ∷ xs) = (f fork≡ x) ∨ fork-in-list f xs
+
+-- Helper: Check if a fork is available (not acquired by any thread)
+fork-is-available : {n : ℕ} → Fork → ProgramState n → Bool
+fork-is-available fork state = not (any-thread-has-fork fork (toList state))
+  where
+    any-thread-has-fork : Fork → List ThreadState → Bool
+    any-thread-has-fork fork [] = false
+    any-thread-has-fork fork (ts ∷ tss) = fork-in-list fork (acquiredForks ts) ∨ any-thread-has-fork fork tss
+
+-- Helper: Check if all threads are waiting
+all-threads-waiting : {n : ℕ} → ProgramState n → Bool
+all-threads-waiting state = all is-waiting (toList state)
+  where
+    is-waiting : ThreadState → Bool
+    is-waiting ts with waiting ts
+    ... | nothing = false
+    ... | just _ = true
+
+-- Process a single statement for a thread, returning new thread state
+process-stmt : Stmt → ThreadState → ThreadState
+process-stmt (ThinkRandomly _) ts = MkThreadState
+  (acquiredForks ts)
+  (just SleepElapsed)
+  (restOfLoop ts)
+  (fullLoop ts)
+process-stmt (EatRandomly _) ts = MkThreadState
+  (acquiredForks ts)
+  (just SleepElapsed)
+  (restOfLoop ts)
+  (fullLoop ts)
+process-stmt (LockFork _ fork) ts = MkThreadState
+  (acquiredForks ts)
+  (just (ForkAvailable fork))
+  (restOfLoop ts)
+  (fullLoop ts)
+
+-- Step a single thread forward if possible
+step-thread : {n : ℕ} → ThreadState → ProgramState n → List ThreadState
+step-thread ts state with waiting ts | restOfLoop ts
+-- Thread is not waiting and has statements to execute
+... | nothing | (stmt ∷ rest) = 
+  let new-ts = process-stmt stmt ts
+  in (MkThreadState
+       (acquiredForks new-ts)
+       (waiting new-ts)
+       rest
+       (fullLoop ts)) ∷ []
+-- Thread is waiting for a fork
+... | just (ForkAvailable fork) | _ =
+  if fork-is-available fork state
+  then (MkThreadState
+         (fork ∷ acquiredForks ts)
+         nothing
+         (restOfLoop ts)
+         (fullLoop ts)) ∷ []
+  else []
+-- Thread is waiting for sleep to elapse
+... | just SleepElapsed | _ =
+  if all-threads-waiting state
+  then (MkThreadState
+         (acquiredForks ts)
+         nothing
+         (restOfLoop ts)
+         (fullLoop ts)) ∷ []
+  else []
+-- Thread finished its loop, release forks and restart
+... | nothing | [] =
+  (MkThreadState
+    []
+    nothing
+    (fullLoop ts)
+    (fullLoop ts)) ∷ []
+
+-- Generate all possible next states by trying to step each thread
+generate-next-states : {n : ℕ} → ProgramState n → List (ProgramState n)
+generate-next-states {zero} [] = []
+generate-next-states {suc n} (ts ∷ rest) =
+  let next-ts-list = step-thread ts (ts ∷ rest)
+      rest-nexts = generate-next-states rest
+      -- Thread at index 0 steps
+      states-from-first = map (λ new-ts → new-ts ∷ rest) next-ts-list
+      -- Other threads step
+      states-from-rest = map (_∷_ ts) rest-nexts
+  in states-from-first ++ states-from-rest
+
+-- Helper to extract threads from a Program
+get-threads : Program → List Thread
+get-threads (MkProgram _ threads) = threads
+
+-- Convert list to vector recursively
+list-to-vec : {A : Set} → (xs : List A) → Vec A (length xs)
+list-to-vec [] = []
+list-to-vec (x ∷ xs) = x ∷ list-to-vec xs
+
+-- Map a function over a list and convert to vector
+map-to-vec : {A B : Set} → (A → B) → (xs : List A) → Vec B (length xs)
+map-to-vec f [] = []
+map-to-vec f (x ∷ xs) = f x ∷ map-to-vec f xs
+
+-- Main function: run a program to produce all possible traces
+-- The type says: given a Program, produce a PossibleTraces with n threads
+{-# TERMINATING #-}
+run-program : (p : Program) → PossibleTraces (length (get-threads p))
+run-program (MkProgram num-forks threads) = go initial-state
+  where
+    n : ℕ
+    n = length threads
+
+    -- Initialize thread state from Thread
+    init-thread-state : Thread → ThreadState
+    init-thread-state (MkThread _ stmts) = MkThreadState [] nothing stmts stmts
+
+    -- Create initial program state
+    initial-state : ProgramState n
+    initial-state = map-to-vec init-thread-state threads
+
+    -- Corecursive generation of the trace tree
+    go : {m : ℕ} → ProgramState m → PossibleTraces m
+    value (go state) = state
+    children (go state) = map go (generate-next-states state)
