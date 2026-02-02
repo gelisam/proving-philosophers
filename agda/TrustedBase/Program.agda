@@ -21,13 +21,16 @@ data Program : Set where
 -- and eat_randomly, only about how often they are called, so we don't need a
 -- sophisticated Agda representation of those functions, we can just use a
 -- hardcoded string.
-render-header : Syntax
-render-header = Block
+render-imports : Syntax
+render-imports = Block
   ( Line "use std::sync::Mutex;"
   ∷ Line "use std::thread;"
   ∷ Line "use rand::Rng;"
-  ∷ Line ""
-  ∷ Line "fn think_randomly(philosopher_id: usize) {"
+  ∷ [] )
+
+render-functions : Syntax
+render-functions = Block
+  ( Line "fn think_randomly(philosopher_id: usize) {"
   ∷ Indent (Block
       ( Line "let mut rng = rand::thread_rng();"
       ∷ Line "let think_time = rng.gen_range(1..=10);"
@@ -36,7 +39,6 @@ render-header = Block
       ∷ Line "println!(\"Philosopher {} is done thinking.\", philosopher_id);"
       ∷ [] ))
   ∷ Line "}"
-  ∷ Line ""
   ∷ Line "fn eat_randomly(philosopher_id: usize) {"
   ∷ Indent (Block
       ( Line "let mut rng = rand::thread_rng();"
@@ -85,10 +87,9 @@ render-thread-joins threads
 -- facts about the wrong program.
 render-program : Program → Syntax
 render-program (MkProgram n threads) = Block
-  ( render-header
-  ∷ Line ""
+  ( render-imports
   ∷ render-fork-declarations n
-  ∷ Line ""
+  ∷ render-functions
   ∷ Line "fn main() {"
   ∷ Indent (Block
       ( render-thread-spawns threads
