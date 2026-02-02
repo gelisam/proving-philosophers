@@ -1,12 +1,12 @@
 {-# OPTIONS --guardedness #-}
-module TrustedCore.Stmt where
+module TrustedBase.Stmt where
 
 open import Data.Nat using (ℕ)
 open import Data.Nat.Show using (show)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 
 open import Syntax using (Syntax; Line)
-open import TrustedCore.Fork using (Fork; MkFork; show-fork)
+open import TrustedBase.Fork using (Fork; MkFork; show-fork)
 
 -- For representing Rust code fragment like
 --
