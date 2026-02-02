@@ -7,6 +7,7 @@ open import Data.List.Base using (List; []; _∷_; reverse; map; _++_)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 
 open import Syntax using (Syntax; Line; Block; Indent)
+open import TrustedCore.Fork using (Fork; MkFork; render-fork-declaration)
 open import TrustedCore.Thread using (Thread; render-spawn-thread; render-join-thread)
 
 -- For representing Rust code like the entirety of rust/main.rs
@@ -48,25 +49,18 @@ render-header = Block
   ∷ [] )
 
 -- static FORK_1_2: Mutex<()> = Mutex::new(());
-render-fork-declaration : ℕ → ℕ → Syntax
-render-fork-declaration i j
-    = Line ("static FORK_" +++ show i
-               +++ "_" +++ show j
-    +++ ": Mutex<()> = Mutex::new(());")
-
--- static FORK_1_2: Mutex<()> = Mutex::new(());
 -- static FORK_2_3: Mutex<()> = Mutex::new(());
 -- static FORK_3_1: Mutex<()> = Mutex::new(());
 render-fork-declarations : ℕ → Syntax
 render-fork-declarations n
   = Block (reverse
-  ( render-fork-declaration n 1
+  ( render-fork-declaration (MkFork n 1)
   ∷ go n
   ))
   where
     go : ℕ → List Syntax
     go i@(suc i-1@(suc _))
-      = render-fork-declaration i-1 i
+      = render-fork-declaration (MkFork i-1 i)
       ∷ go i-1
     go (suc zero)
       = []

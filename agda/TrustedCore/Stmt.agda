@@ -6,6 +6,7 @@ open import Data.Nat.Show using (show)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 
 open import Syntax using (Syntax; Line)
+open import TrustedCore.Fork using (Fork; MkFork; show-fork)
 
 -- For representing Rust code fragment like
 --
@@ -34,7 +35,6 @@ render-stmt (EatRandomly n)
   = Line ("eat_randomly(" +++ show n +++ ");")
 render-stmt (LockFork g i j)
   = Line ( "let _guard" +++ show g
-       +++ " = FORK_" +++ show i
-              +++ "_" +++ show j
+       +++ " = " +++ show-fork (MkFork i j)
        +++ ".lock().unwrap();"
          )
