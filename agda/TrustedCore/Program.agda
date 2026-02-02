@@ -1,65 +1,20 @@
 {-# OPTIONS --guardedness #-}
-module Stmt where
+module TrustedCore.Program where
 
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
-open import Data.List.Base using (List; []; _∷_; reverse; map; concat; _++_)
-open import Data.String.Base using (String)
+open import Data.List.Base using (List; []; _∷_; reverse; map; _++_)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
+
 open import Syntax using (Syntax; Line; Block; Indent)
+open import TrustedCore.Thread using (Thread; render-spawn-thread; render-join-thread)
 
--- Data types for representing Rust code structure
-data Stmt : Set where
-  ThinkRandomly
-    : ℕ → Stmt
-  EatRandomly
-    : ℕ → Stmt
-  LockFork
-    : ℕ → ℕ → ℕ → Stmt  -- guard number, fork i, fork j
-
-data Thread : Set where
-  MkThread : ℕ → List Stmt → Thread  -- philosopher id, block
-
--- Render functions that produce Syntax
-render-stmt : Stmt → Syntax
-render-stmt (ThinkRandomly n)
-  = Line ("think_randomly(" +++ show n +++ ");")
-render-stmt (EatRandomly n)
-  = Line ("eat_randomly(" +++ show n +++ ");")
-render-stmt (LockFork g i j)
-  = Line ( "let _guard" +++ show g
-       +++ " = FORK_" +++ show i
-              +++ "_" +++ show j
-       +++ ".lock().unwrap();"
-         )
-
-render-thread : Thread → Syntax
-render-thread (MkThread pid stmts)
-  = Block (spawnStart ∷ loopBody ∷ spawnClose ∷ [])
-  where
-    handleName : String
-    handleName
-      = "handle" +++ show pid
-
-    spawnStart : Syntax
-    spawnStart
-      = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
-
-    loopBody : Syntax
-    loopBody
-      = Indent (Block 
-      ( Line "loop {"
-      ∷ Indent (Block (map render-stmt stmts))
-      ∷ Line "}"
-      ∷ [] ))
-
-    spawnClose : Syntax
-    spawnClose
-      = Line "});"
-
-render-threads : List Thread → Syntax
-render-threads threads
-  = Block (map render-thread threads)
+-- For representing Rust code like the entirety of rust/main.rs
+data Program : Set where
+  MkProgram
+    : ℕ  -- number of forks
+    → List Thread
+    → Program
 
 render-header : Syntax
 render-header = Block
@@ -114,25 +69,25 @@ render-fork-declarations n
     go zero
       = []
 
-render-join : Thread → Syntax
-render-join (MkThread pid _)
-  = Line ("handle" +++ show pid +++ ".join().unwrap();")
+render-thread-spawns : List Thread → Syntax
+render-thread-spawns threads
+  = Block (map render-spawn-thread threads)
 
 -- Render join statements for each thread
-render-joins : List Thread → Syntax
-render-joins threads
-  = Block (map render-join threads)
+render-thread-joins : List Thread → Syntax
+render-thread-joins threads
+  = Block (map render-join-thread threads)
 
-render-program : List Thread → Syntax
-render-program threads = Block
+render-program : Program → Syntax
+render-program (MkProgram n threads) = Block
   ( render-header
   ∷ Line ""
-  ∷ render-fork-declarations 5
+  ∷ render-fork-declarations n
   ∷ Line ""
   ∷ Line "fn main() {"
   ∷ Indent (Block
-      ( render-threads threads
-      ∷ render-joins threads
+      ( render-thread-spawns threads
+      ∷ render-thread-joins threads
       ∷ [] ))
   ∷ Line "}"
   ∷ [] )

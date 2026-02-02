@@ -9,10 +9,13 @@ open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 open import IO.Base using (Main; run)
 open import IO.Finite using (putStr)
 
-open import Syntax using (Syntax; Line; Block; Indent)
-open import Stmt using (ThinkRandomly; EatRandomly; LockFork; Thread; MkThread; render-program)
+import Syntax
+open import TrustedCore.Stmt using (ThinkRandomly; LockFork; EatRandomly)
+open import TrustedCore.Thread using (Thread; MkThread)
+open import TrustedCore.Program using (Program; MkProgram; render-program)
 
--- Define the threads based on main.rs
+-- Agda representation of rust/main.rs
+
 threads : List Thread
 threads =
   MkThread 1
@@ -47,5 +50,8 @@ threads =
     ∷ [] )
   ∷ []
 
+program : Program
+program = MkProgram 5 threads
+
 main : Main
-main = run (putStr (Syntax.render (render-program threads)))
+main = run (putStr (Syntax.render (render-program program)))
