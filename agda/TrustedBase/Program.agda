@@ -1,5 +1,5 @@
 {-# OPTIONS --guardedness #-}
-module TrustedCore.Program where
+module TrustedBase.Program where
 
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
@@ -7,8 +7,8 @@ open import Data.List.Base using (List; []; _∷_; reverse; map; _++_)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 
 open import Syntax using (Syntax; Line; Block; Indent)
-open import TrustedCore.Fork using (Fork; MkFork; render-fork-declaration)
-open import TrustedCore.Thread using (Thread; render-spawn-thread; render-join-thread)
+open import TrustedBase.Fork using (Fork; MkFork; render-fork-declaration)
+open import TrustedBase.Thread using (Thread; render-spawn-thread; render-join-thread)
 
 -- For representing Rust code like the entirety of rust/main.rs
 data Program : Set where

@@ -1,5 +1,5 @@
 {-# OPTIONS --guardedness #-}
-module TrustedCore.Fork where
+module TrustedBase.Fork where
 
 open import Data.Nat using (ℕ)
 open import Data.Nat.Show using (show)

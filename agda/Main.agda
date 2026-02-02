@@ -10,10 +10,10 @@ open import IO.Base using (Main; run)
 open import IO.Finite using (putStr)
 
 import Syntax
-open import TrustedCore.Fork using (Fork; MkFork)
-open import TrustedCore.Stmt using (ThinkRandomly; LockFork; EatRandomly)
-open import TrustedCore.Thread using (Thread; MkThread)
-open import TrustedCore.Program using (Program; MkProgram; render-program)
+open import TrustedBase.Fork using (Fork; MkFork)
+open import TrustedBase.Stmt using (ThinkRandomly; LockFork; EatRandomly)
+open import TrustedBase.Thread using (Thread; MkThread)
+open import TrustedBase.Program using (Program; MkProgram; render-program)
 
 -- an Agda representation of rust/main.rs, so we can prove things about it.
 

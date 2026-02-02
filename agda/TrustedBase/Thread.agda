@@ -1,5 +1,5 @@
 {-# OPTIONS --guardedness #-}
-module TrustedCore.Thread where
+module TrustedBase.Thread where
 
 open import Data.Nat using (ℕ)
 open import Data.Nat.Show using (show)
@@ -8,7 +8,7 @@ open import Data.String.Base using (String)
 open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 
 open import Syntax using (Syntax; Line; Block; Indent)
-open import TrustedCore.Stmt using (Stmt; render-stmt)
+open import TrustedBase.Stmt using (Stmt; render-stmt)
 
 -- For representing Rust code fragment like
 --
