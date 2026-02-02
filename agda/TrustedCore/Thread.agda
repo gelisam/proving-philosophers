@@ -23,6 +23,12 @@ open import TrustedCore.Stmt using (Stmt; render-stmt)
 data Thread : Set where
   MkThread : ℕ → List Stmt → Thread  -- philosopher id, block
 
+-- We have to trust that
+--
+-- > render-spawn-thread (MkThread 1 (ThinkRandomly 1 ∷ ...))
+--
+-- doesn't produce something non-sensical like "mutex.lock()", otherwise we will
+-- be proving facts about the wrong program.
 render-spawn-thread : Thread → Syntax
 render-spawn-thread (MkThread pid stmts)
   = Block (spawnStart ∷ loopBody ∷ spawnClose ∷ [])

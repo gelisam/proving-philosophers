@@ -16,6 +16,10 @@ data Program : Set where
     → List Thread
     → Program
 
+-- We are not going to prove anything about the implementation of think_randomly
+-- and eat_randomly, only about how often they are called, so we don't need a
+-- sophisticated Agda representation of those functions, we can just use a
+-- hardcoded string.
 render-header : Syntax
 render-header = Block
   ( Line "use std::sync::Mutex;"
@@ -78,6 +82,13 @@ render-thread-joins : List Thread → Syntax
 render-thread-joins threads
   = Block (map render-join-thread threads)
 
+-- We have to trust that
+--
+-- > render-program (MkProgram 5 (MkThread 1 (ThinkRandomly 1 ∷ ...) ∷ ...))
+--
+-- doesn't produce something non-sensical like
+-- "fn main() {println!(\"Hello, world!\");}", otherwise we will be proving
+-- facts about the wrong program.
 render-program : Program → Syntax
 render-program (MkProgram n threads) = Block
   ( render-header

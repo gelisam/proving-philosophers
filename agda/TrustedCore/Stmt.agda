@@ -21,6 +21,12 @@ data Stmt : Set where
   LockFork
     : ℕ → ℕ → ℕ → Stmt  -- guard number, fork i, fork j
 
+-- We have to trust that
+--
+-- > render-stmt (ThinkRandomly 3)
+--
+-- doesn't produce something non-sensical like "mutex.lock()", otherwise we will
+-- be proving facts about the wrong program.
 render-stmt : Stmt → Syntax
 render-stmt (ThinkRandomly n)
   = Line ("think_randomly(" +++ show n +++ ");")

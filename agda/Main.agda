@@ -14,7 +14,7 @@ open import TrustedCore.Stmt using (ThinkRandomly; LockFork; EatRandomly)
 open import TrustedCore.Thread using (Thread; MkThread)
 open import TrustedCore.Program using (Program; MkProgram; render-program)
 
--- Agda representation of rust/main.rs
+-- an Agda representation of rust/main.rs, so we can prove things about it.
 
 threads : List Thread
 threads =
@@ -53,5 +53,7 @@ threads =
 program : Program
 program = MkProgram 5 threads
 
+-- Render the Agda representation of the Rust code to actual Rust code, so the
+-- caller can verify that our proof is about the right program.
 main : Main
 main = run (putStr (Syntax.render (render-program program)))
