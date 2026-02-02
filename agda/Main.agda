@@ -10,8 +10,8 @@ open import IO.Base using (Main; run)
 open import IO.Finite using (putStr)
 open import Syntax using (Syntax; Line; Block; Indent)
 
-header : Syntax
-header = Block
+render-header : Syntax
+render-header = Block
   ( Line "use std::sync::Mutex;"
   ∷ Line "use std::thread;"
   ∷ Line "use rand::Rng;"
@@ -62,10 +62,6 @@ render-stmt (LockFork g i j)
        +++ ".lock().unwrap();"
          )
 
-render-block : List Stmt → Syntax
-render-block stmts
-  = Block (map render-stmt stmts)
-
 render-threads : List Thread → Syntax
 render-threads threads
   = Block (go threads)
@@ -88,7 +84,7 @@ render-threads threads
         loopBody
           = Indent (Block 
           ( Line "loop {"
-          ∷ Indent (render-block stmts)
+          ∷ Indent (Block (map render-stmt stmts))
           ∷ Line "}"
           ∷ [] ))
 
@@ -107,8 +103,8 @@ render-fork-declaration i j
 -- static FORK_1_2: Mutex<()> = Mutex::new(());
 -- static FORK_2_3: Mutex<()> = Mutex::new(());
 -- static FORK_3_1: Mutex<()> = Mutex::new(());
-fork-declarations : ℕ → Syntax
-fork-declarations n
+render-fork-declarations : ℕ → Syntax
+render-fork-declarations n
   = Block (reverse
   ( render-fork-declaration n 1
   ∷ go n
@@ -158,24 +154,20 @@ threads =
     ∷ [] )
   ∷ []
 
+render-join : Thread → Syntax
+render-join (MkThread pid _)
+  = Line ("handle" +++ show pid +++ ".join().unwrap();")
+
 -- Render join statements for each thread
 render-joins : List Thread → Syntax
-render-joins [] = Block []
-render-joins (MkThread pid _ ∷ ts)
-  = Block (Line ("handle" +++ show pid +++ ".join().unwrap();") ∷ restJoins ts)
-  where
-    restJoins : List Thread → List Syntax
-    restJoins [] = []
-    restJoins xs with render-joins xs
-    ... | Block ys = ys
-    ... | Line _ = []  -- unreachable
-    ... | Indent _ = []  -- unreachable
+render-joins threads
+  = Block (map render-join threads)
 
-full-program : List Thread → Syntax
-full-program threads = Block
-  ( header
+render-program : List Thread → Syntax
+render-program threads = Block
+  ( render-header
   ∷ Line ""
-  ∷ fork-declarations 5
+  ∷ render-fork-declarations 5
   ∷ Line ""
   ∷ Line "fn main() {"
   ∷ Indent (Block
@@ -186,4 +178,4 @@ full-program threads = Block
   ∷ [] )
 
 main : Main
-main = run (putStr (Syntax.render (full-program threads)))
+main = run (putStr (Syntax.render (render-program threads)))
