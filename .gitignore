@@ -6,3 +6,4 @@ Cargo.lock
 *.agdai
 agda-build/
 generated.rs
+expected.rs
