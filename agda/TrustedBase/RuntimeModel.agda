@@ -6,7 +6,8 @@ open import Data.Bool.ListAction using (all)
 open import Data.List.Base using (List; []; _∷_; map; filter; any; _++_; length)
 open import Data.Maybe.Base using (Maybe; just; nothing)
 open import Data.Nat using (ℕ; zero; suc; _≡ᵇ_)
-open import Data.Vec using (Vec; []; _∷_; toList)
+open import Data.Vec as Vec using (Vec; []; _∷_; toList; fromList)
+open import Data.Vec using () renaming (map to mapVec)
 open import Function.Base using (id)
 
 open import Fork using (Fork; MkFork)
@@ -134,16 +135,6 @@ generate-next-states {suc n} (ts ∷ rest) =
 get-threads : Program → List Thread
 get-threads (MkProgram _ threads) = threads
 
--- Convert list to vector recursively
-list-to-vec : {A : Set} → (xs : List A) → Vec A (length xs)
-list-to-vec [] = []
-list-to-vec (x ∷ xs) = x ∷ list-to-vec xs
-
--- Map a function over a list and convert to vector
-map-to-vec : {A B : Set} → (A → B) → (xs : List A) → Vec B (length xs)
-map-to-vec f [] = []
-map-to-vec f (x ∷ xs) = f x ∷ map-to-vec f xs
-
 -- Main function: run a program to produce all possible traces
 -- The type says: given a Program, produce a PossibleTraces with n threads
 {-# TERMINATING #-}
@@ -159,7 +150,7 @@ run-program (MkProgram num-forks threads) = go initial-state
 
     -- Create initial program state
     initial-state : ProgramState n
-    initial-state = map-to-vec init-thread-state threads
+    initial-state = mapVec init-thread-state (fromList threads)
 
     -- Corecursive generation of the trace tree
     go : {m : ℕ} → ProgramState m → PossibleTraces m
