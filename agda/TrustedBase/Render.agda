@@ -12,12 +12,18 @@ open import Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
 open import Thread using (Thread; MkThread)
 open import Program using (Program; MkProgram)
 
--- Render a fork declaration
+-- Generate a Rust declaration for a fork, e.g.:
+-- static FORK_1_2: Mutex<()> = Mutex::new(());
 render-fork-declaration : Fork → Syntax
 render-fork-declaration fork
     = Line ("static " +++ show-fork fork +++ ": Mutex<()> = Mutex::new(());")
 
--- Render a statement
+-- We have to trust that
+--
+-- > render-stmt (ThinkRandomly 3)
+--
+-- doesn't produce something non-sensical like "mutex.lock()", otherwise we will
+-- be proving facts about the wrong program.
 render-stmt : Stmt → Syntax
 render-stmt (ThinkRandomly n)
   = Line ("think_randomly(" +++ show n +++ ");")
@@ -29,7 +35,12 @@ render-stmt (LockFork g fork)
        +++ ".lock().unwrap();"
          )
 
--- Render a thread spawn
+-- We have to trust that
+--
+-- > render-spawn-thread (MkThread 1 (ThinkRandomly 1 ∷ ...))
+--
+-- doesn't produce something non-sensical like "mutex.lock()", otherwise we will
+-- be proving facts about the wrong program.
 render-spawn-thread : Thread → Syntax
 render-spawn-thread (MkThread pid stmts)
   = Block (spawnStart ∷ loopBody ∷ spawnClose ∷ [])
@@ -54,12 +65,14 @@ render-spawn-thread (MkThread pid stmts)
     spawnClose
       = Line "});"
 
--- Render a thread join
 render-join-thread : Thread → Syntax
 render-join-thread (MkThread pid _)
   = Line ("handle" +++ show pid +++ ".join().unwrap();")
 
--- Render imports for the Rust program
+-- We are not going to prove anything about the implementation of think_randomly
+-- and eat_randomly, only about how often they are called, so we don't need a
+-- sophisticated Agda representation of those functions, we can just use a
+-- hardcoded string.
 render-imports : Syntax
 render-imports = Block
   ( Line "use std::sync::Mutex;"
@@ -90,7 +103,9 @@ render-functions = Block
   ∷ Line "}"
   ∷ [] )
 
--- Render fork declarations for n forks
+-- static FORK_1_2: Mutex<()> = Mutex::new(());
+-- static FORK_2_3: Mutex<()> = Mutex::new(());
+-- static FORK_3_1: Mutex<()> = Mutex::new(());
 render-fork-declarations : ℕ → Syntax
 render-fork-declarations n
   = Block (reverse
@@ -107,17 +122,15 @@ render-fork-declarations n
     go zero
       = []
 
--- Render thread spawns
 render-thread-spawns : List Thread → Syntax
 render-thread-spawns threads
   = Block (map render-spawn-thread threads)
 
--- Render thread joins
+-- Render join statements for each thread
 render-thread-joins : List Thread → Syntax
 render-thread-joins threads
   = Block (map render-join-thread threads)
 
--- Render the complete program
 render-program-internal : ℕ → List Thread → Syntax
 render-program-internal n threads = Block
   ( render-imports
@@ -131,6 +144,12 @@ render-program-internal n threads = Block
   ∷ Line "}"
   ∷ [] )
 
--- Render a program from a Program value
+-- We have to trust that
+--
+-- > render-program (MkProgram 5 (MkThread 1 (ThinkRandomly 1 ∷ ...) ∷ ...))
+--
+-- doesn't produce something non-sensical like
+-- "fn main() {println!(\"Hello, world!\");}", otherwise we will be proving
+-- facts about the wrong program.
 render-program : Program → Syntax
 render-program (MkProgram n threads) = render-program-internal n threads
