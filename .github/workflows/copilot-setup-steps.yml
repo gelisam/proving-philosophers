@@ -94,6 +94,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y agda
 
+          # Set ghcup to install in user directory so caching works
+          export GHCUP_INSTALL_BASE_PREFIX="$HOME"
+          
+          # Add ghcup and GHC to PATH if cached
+          export PATH="$HOME/.ghcup/bin:$PATH"
+
           # Install GHC 8.10.7 via ghcup (compatible with Agda 2.6.3)
           # The default GHC 9.4.7 has deprecated '*' at type-level which causes compilation errors
           if ! ghc --version 2>/dev/null | grep -q "8.10.7"; then
@@ -108,6 +114,8 @@ jobs:
           echo "Final versions:"
           agda --version
           ghc --version
+        env:
+          GHCUP_INSTALL_BASE_PREFIX: ${{ env.HOME }}
 
       - name: Install Agda Standard Library
         run: |

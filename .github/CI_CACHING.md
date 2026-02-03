@@ -42,7 +42,8 @@ The workflow uses 6 separate caches to optimize different aspects of the build p
 **Purpose:** Stores the GHC 8.10.7 compiler installed via ghcup  
 **Invalidation:** When GHC version changes (hardcoded to 8.10.7)  
 **Restore keys:** None (exact version match required for compilation compatibility)  
-**Benefit:** Avoids re-installing GHC 8.10.7, which takes several minutes
+**Benefit:** Avoids re-installing GHC 8.10.7, which takes several minutes  
+**Important:** `GHCUP_INSTALL_BASE_PREFIX` must be set to `$HOME` to ensure ghcup installs to `~/.ghcup` instead of `/usr/local/.ghcup` (system-wide). Without this, the cache will be empty and GHC will be reinstalled on every run.
 
 ### Cache 6: Compiled Agda Artifacts
 **Path:** `~/.agda`  
