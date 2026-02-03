@@ -1,12 +1,12 @@
 {-# OPTIONS --guardedness #-}
-module TrustedBase.Practice where
+module Practice where
 
 open import Data.Bool using (Bool; true; false; not; T)
 open import Data.List.Base using (List; []; _∷_)
 open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import TrustedBase.Tree using (Tree; AllSubtrees; AllPaths; here; there; ValueIs)
+open import Tree using (Tree; AllSubtrees; AllPaths; here; there; ValueIs)
 
 -- An infinite tree of alternating booleans, a much simplified practice version
 -- of an infinite tree of program states. As a simplified version of proving

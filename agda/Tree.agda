@@ -1,5 +1,5 @@
 {-# OPTIONS --guardedness #-}
-module TrustedBase.Tree where
+module Tree where
 
 open import Data.List.Base using (List)
 open import Data.List.Relation.Unary.All using (All)

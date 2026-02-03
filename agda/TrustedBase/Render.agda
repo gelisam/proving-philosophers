@@ -1,26 +1,65 @@
 {-# OPTIONS --guardedness #-}
-module TrustedBase.Program where
+module TrustedBase.Render where
 
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
-open import Data.List.Base using (List; []; _∷_; reverse; map; _++_)
-open import Data.String.Base as Str using () renaming (_++_ to _+++_)
+open import Data.List.Base using (List; []; _∷_; reverse; map)
+open import Data.String.Base as Str using (String) renaming (_++_ to _+++_)
 
 open import Syntax using (Syntax; Line; Block; Indent)
-open import TrustedBase.Fork using (Fork; MkFork; render-fork-declaration)
-open import TrustedBase.Thread using (Thread; render-spawn-thread; render-join-thread)
+open import Fork using (Fork; MkFork; show-fork)
+open import Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
+open import Thread using (Thread; MkThread)
+open import Program using (Program; MkProgram)
 
--- For representing Rust code like the entirety of rust/main.rs
-data Program : Set where
-  MkProgram
-    : ℕ  -- number of forks
-    → List Thread
-    → Program
+-- Render a fork declaration
+render-fork-declaration : Fork → Syntax
+render-fork-declaration fork
+    = Line ("static " +++ show-fork fork +++ ": Mutex<()> = Mutex::new(());")
 
--- We are not going to prove anything about the implementation of think_randomly
--- and eat_randomly, only about how often they are called, so we don't need a
--- sophisticated Agda representation of those functions, we can just use a
--- hardcoded string.
+-- Render a statement
+render-stmt : Stmt → Syntax
+render-stmt (ThinkRandomly n)
+  = Line ("think_randomly(" +++ show n +++ ");")
+render-stmt (EatRandomly n)
+  = Line ("eat_randomly(" +++ show n +++ ");")
+render-stmt (LockFork g fork)
+  = Line ( "let _guard" +++ show g
+       +++ " = " +++ show-fork fork
+       +++ ".lock().unwrap();"
+         )
+
+-- Render a thread spawn
+render-spawn-thread : Thread → Syntax
+render-spawn-thread (MkThread pid stmts)
+  = Block (spawnStart ∷ loopBody ∷ spawnClose ∷ [])
+  where
+    handleName : String
+    handleName
+      = "handle" +++ show pid
+
+    spawnStart : Syntax
+    spawnStart
+      = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
+
+    loopBody : Syntax
+    loopBody
+      = Indent (Block 
+      ( Line "loop {"
+      ∷ Indent (Block (map render-stmt stmts))
+      ∷ Line "}"
+      ∷ [] ))
+
+    spawnClose : Syntax
+    spawnClose
+      = Line "});"
+
+-- Render a thread join
+render-join-thread : Thread → Syntax
+render-join-thread (MkThread pid _)
+  = Line ("handle" +++ show pid +++ ".join().unwrap();")
+
+-- Render imports for the Rust program
 render-imports : Syntax
 render-imports = Block
   ( Line "use std::sync::Mutex;"
@@ -28,6 +67,7 @@ render-imports = Block
   ∷ Line "use rand::Rng;"
   ∷ [] )
 
+-- Render helper functions for the Rust program
 render-functions : Syntax
 render-functions = Block
   ( Line "fn think_randomly(philosopher_id: usize) {"
@@ -50,9 +90,7 @@ render-functions = Block
   ∷ Line "}"
   ∷ [] )
 
--- static FORK_1_2: Mutex<()> = Mutex::new(());
--- static FORK_2_3: Mutex<()> = Mutex::new(());
--- static FORK_3_1: Mutex<()> = Mutex::new(());
+-- Render fork declarations for n forks
 render-fork-declarations : ℕ → Syntax
 render-fork-declarations n
   = Block (reverse
@@ -69,24 +107,19 @@ render-fork-declarations n
     go zero
       = []
 
+-- Render thread spawns
 render-thread-spawns : List Thread → Syntax
 render-thread-spawns threads
   = Block (map render-spawn-thread threads)
 
--- Render join statements for each thread
+-- Render thread joins
 render-thread-joins : List Thread → Syntax
 render-thread-joins threads
   = Block (map render-join-thread threads)
 
--- We have to trust that
---
--- > render-program (MkProgram 5 (MkThread 1 (ThinkRandomly 1 ∷ ...) ∷ ...))
---
--- doesn't produce something non-sensical like
--- "fn main() {println!(\"Hello, world!\");}", otherwise we will be proving
--- facts about the wrong program.
-render-program : Program → Syntax
-render-program (MkProgram n threads) = Block
+-- Render the complete program
+render-program-internal : ℕ → List Thread → Syntax
+render-program-internal n threads = Block
   ( render-imports
   ∷ render-fork-declarations n
   ∷ render-functions
@@ -97,3 +130,7 @@ render-program (MkProgram n threads) = Block
       ∷ [] ))
   ∷ Line "}"
   ∷ [] )
+
+-- Render a program from a Program value
+render-program : Program → Syntax
+render-program (MkProgram n threads) = render-program-internal n threads

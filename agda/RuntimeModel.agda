@@ -1,13 +1,13 @@
 {-# OPTIONS --guardedness #-}
-module TrustedBase.RuntimeModel where
+module RuntimeModel where
 
 open import Data.List.Base using (List)
 open import Data.Maybe.Base using (Maybe)
 open import Data.Vec using (Vec)
 
-open import TrustedBase.Fork using (Fork)
-open import TrustedBase.Stmt using (Stmt)
-open import TrustedBase.Tree using (Tree)
+open import Fork using (Fork)
+open import Stmt using (Stmt)
+open import Tree using (Tree)
 
 -- Represents what condition a thread is waiting for
 data WaitingCondition : Set where
