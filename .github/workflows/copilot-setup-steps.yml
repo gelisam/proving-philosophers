@@ -114,8 +114,6 @@ jobs:
           echo "Final versions:"
           agda --version
           ghc --version
-        env:
-          GHCUP_INSTALL_BASE_PREFIX: ${{ env.HOME }}
 
       - name: Install Agda Standard Library
         run: |
