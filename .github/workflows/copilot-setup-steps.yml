@@ -113,7 +113,6 @@ jobs:
       - name: Install GHC
         run: |
           set -e
-          
           # Set ghcup to install in user directory so caching works
           export GHCUP_INSTALL_BASE_PREFIX="$HOME"
           

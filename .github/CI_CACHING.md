@@ -67,7 +67,7 @@ The workflow uses 7 separate caches to optimize different aspects of the build p
 ## Performance Impact
 
 Without caching:
-- Agda installation (apt-get): ~30-60 seconds
+- Agda installation (download + install): ~30-60 seconds
 - Agda standard library clone: ~30 seconds
 - GHC installation: ~3-5 minutes
 - Agda library compilation (first time): ~2-5 minutes
@@ -75,7 +75,7 @@ Without caching:
 - **Total: ~7-13 minutes**
 
 With full cache hits:
-- Agda installation (cached packages): ~10-20 seconds
+- Agda installation (install only, packages cached): ~10-20 seconds
 - Agda library compilation (cached): ~10 seconds
 - Rust dependency compilation (cached): ~10 seconds
 - **Total: ~30-60 seconds**
