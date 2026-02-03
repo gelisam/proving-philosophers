@@ -6,7 +6,8 @@ open import Data.Bool.ListAction using (all)
 open import Data.List.Base using (List; []; _∷_; map; filter; any; _++_; length)
 open import Data.Maybe.Base using (Maybe; just; nothing)
 open import Data.Nat using (ℕ; zero; suc; _≡ᵇ_)
-open import Data.Vec using (Vec; []; _∷_; toList; fromList; map)
+open import Data.Vec as Vec using (Vec; []; _∷_; toList; fromList)
+open import Data.Vec using () renaming (map to mapVec)
 open import Function.Base using (id)
 
 open import Fork using (Fork; MkFork)
@@ -149,7 +150,7 @@ run-program (MkProgram num-forks threads) = go initial-state
 
     -- Create initial program state
     initial-state : ProgramState n
-    initial-state = map init-thread-state (fromList threads)
+    initial-state = mapVec init-thread-state (fromList threads)
 
     -- Corecursive generation of the trace tree
     go : {m : ℕ} → ProgramState m → PossibleTraces m
