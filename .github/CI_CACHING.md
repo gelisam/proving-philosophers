@@ -4,7 +4,7 @@ This document describes the caching strategy used in the GitHub Actions workflow
 
 ## Overview
 
-The workflow uses 6 separate caches to optimize different aspects of the build process. Each cache is strategically designed to minimize redundant work while ensuring correctness.
+The workflow uses 7 separate caches to optimize different aspects of the build process. Each cache is strategically designed to minimize redundant work while ensuring correctness.
 
 ## Cache Layers
 
@@ -56,9 +56,18 @@ The workflow uses 6 separate caches to optimize different aspects of the build p
 - `libraries` (Agda library registry)
 - `defaults` (default libraries configuration)
 
+### Cache 7: APT Package Cache
+**Path:** `/var/cache/apt/archives` and `/var/lib/apt/lists`  
+**Purpose:** Stores downloaded .deb packages and package lists to speed up apt-get install  
+**Invalidation:** When Ubuntu version changes (included in runner.os) or Agda version changes  
+**Restore keys:** None (exact version match required)  
+**Benefit:** Avoids re-downloading Agda packages from Ubuntu repositories, saving ~30-60 seconds per build  
+**Note:** Caches the downloaded packages but not the installed binaries (which go to system directories)
+
 ## Performance Impact
 
 Without caching:
+- Agda installation (apt-get): ~30-60 seconds
 - Agda standard library clone: ~30 seconds
 - GHC installation: ~3-5 minutes
 - Agda library compilation (first time): ~2-5 minutes
@@ -66,9 +75,10 @@ Without caching:
 - **Total: ~7-13 minutes**
 
 With full cache hits:
+- Agda installation (cached packages): ~10-20 seconds
 - Agda library compilation (cached): ~10 seconds
 - Rust dependency compilation (cached): ~10 seconds
-- **Total: ~1-2 minutes**
+- **Total: ~30-60 seconds**
 
 ## Cache Key Strategy
 

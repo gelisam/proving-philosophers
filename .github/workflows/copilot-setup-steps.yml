@@ -88,12 +88,32 @@ jobs:
           path: ~/.agda
           key: ${{ runner.os }}-agda-compiled-${{ env.AGDA_STDLIB_VERSION }}
 
+      # Cache 7: APT Package Cache
+      # Contains downloaded .deb packages to speed up apt-get install
+      # Caching the APT archives avoids re-downloading Agda and its dependencies
+      # Invalidated when: Ubuntu version changes (runner.os includes Ubuntu version)
+      - name: Cache APT packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: ${{ runner.os }}-apt-agda-2.6.3
+
       - name: Install Agda
         run: |
           set -e
           sudo apt-get update
           sudo apt-get install -y agda
 
+          # Verify Agda installation
+          echo "Agda installed:"
+          agda --version
+
+      - name: Install GHC
+        run: |
+          set -e
+          
           # Set ghcup to install in user directory so caching works
           export GHCUP_INSTALL_BASE_PREFIX="$HOME"
           
@@ -110,9 +130,8 @@ jobs:
             echo "GHC 8.10.7 already installed (cached)"
           fi
 
-          # Verify versions
-          echo "Final versions:"
-          agda --version
+          # Verify GHC installation
+          echo "GHC installed:"
           ghc --version
 
       - name: Install Agda Standard Library
