@@ -30,3 +30,7 @@ data AllPaths {A : Set} (P : Tree A → Set) (t : Tree A) : Set where
   there
     : All (AllPaths P) (Tree.children t)
     → AllPaths P t
+
+-- Helper function for the common case where P is a predicate on values
+ValueIs : {A : Set} → (A → Set) → (Tree A → Set)
+ValueIs P t = P (Tree.value t)
