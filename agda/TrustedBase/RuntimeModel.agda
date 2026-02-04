@@ -14,7 +14,7 @@ open import Fork using (Fork; MkFork)
 open import Program using (Program; MkProgram)
 open import Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
 open import Thread using (Thread; MkThread)
-open import Tree using (Tree)
+open import Tree using (Tree; MkTree)
 
 -- Represents what condition a thread is waiting for
 data WaitingCondition : Set where
@@ -137,9 +137,9 @@ get-threads (MkProgram _ threads) = threads
 
 -- Main function: run a program to produce all possible traces
 -- The type says: given a Program, produce a PossibleTraces with n threads
-{-# TERMINATING #-}
 run-program : (p : Program) → PossibleTraces (length (get-threads p))
-run-program (MkProgram num-forks threads) = go initial-state
+run-program (MkProgram num-forks threads)
+  = MkTree generate-next-states initial-state
   where
     n : ℕ
     n = length threads
@@ -151,8 +151,3 @@ run-program (MkProgram num-forks threads) = go initial-state
     -- Create initial program state
     initial-state : ProgramState n
     initial-state = mapVec init-thread-state (fromList threads)
-
-    -- Corecursive generation of the trace tree
-    go : {m : ℕ} → ProgramState m → PossibleTraces m
-    Tree.value (go state) = state
-    Tree.children (go state) = map go (generate-next-states state)

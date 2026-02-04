@@ -6,22 +6,25 @@ open import Data.List.Base using (List; []; _∷_)
 open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import Tree using (Tree; AllSubtrees; AllPaths; here; there; ValueIs)
+open import Tree using (Tree; MkTree)
+open import AllSubtrees using (AllSubtrees)
+open import AllPaths using (AllPaths; here; there)
 
 -- An infinite tree of alternating booleans, a much simplified practice version
 -- of an infinite tree of program states. As a simplified version of proving
 -- that no philosopher starves, we want to prove that true occurs infinitely
 -- often.
+ 
+boolTreeStep : Bool → List Bool
+boolTreeStep b = not b ∷ []
+
 boolTree : Bool → Tree Bool
-Tree.value (boolTree b)
-  = b
-Tree.children (boolTree b)
-  = boolTree (not b) ∷ []
+boolTree b = MkTree boolTreeStep b
 
 -- true occurs after a finite number of steps
 eventuallyTrueFrom
   : (b : Bool)
-  → AllPaths (ValueIs (_≡_ true)) (boolTree b)
+  → AllPaths boolTreeStep (_≡_ true) b
 eventuallyTrueFrom true
   = here refl
 eventuallyTrueFrom false
@@ -30,8 +33,8 @@ eventuallyTrueFrom false
 -- from any node, true occurs after a finite number of steps
 eventuallyTrueFromAnywhere
   : (b : Bool)
-  → AllSubtrees (AllPaths (ValueIs (_≡_ true))) (boolTree b)
-AllSubtrees.value (eventuallyTrueFromAnywhere b)
+  → AllSubtrees boolTreeStep (AllPaths boolTreeStep (_≡_ true)) b
+AllSubtrees.trueHere (eventuallyTrueFromAnywhere b)
   = eventuallyTrueFrom b
-AllSubtrees.children (eventuallyTrueFromAnywhere b)
+AllSubtrees.trueThere (eventuallyTrueFromAnywhere b)
   = eventuallyTrueFromAnywhere (not b) ∷ []
