@@ -1,4 +1,3 @@
-{-# OPTIONS --guardedness #-}
 module Fork where
 
 open import Data.Nat using (ℕ)

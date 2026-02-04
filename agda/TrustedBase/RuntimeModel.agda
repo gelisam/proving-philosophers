@@ -1,4 +1,3 @@
-{-# OPTIONS --guardedness #-}
 module TrustedBase.RuntimeModel where
 
 open import Data.Bool.Base using (Bool; true; false; _∧_; _∨_; not; if_then_else_)

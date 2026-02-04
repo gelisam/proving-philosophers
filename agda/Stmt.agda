@@ -1,4 +1,3 @@
-{-# OPTIONS --guardedness #-}
 module Stmt where
 
 open import Data.Nat using (ℕ)

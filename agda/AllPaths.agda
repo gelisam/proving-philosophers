@@ -1,4 +1,3 @@
-{-# OPTIONS --guardedness #-}
 module AllPaths where
 
 open import Data.List.Base using (List)

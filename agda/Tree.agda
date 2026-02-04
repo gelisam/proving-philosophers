@@ -1,4 +1,3 @@
-{-# OPTIONS --guardedness #-}
 module Tree where
 
 open import Data.List.Base using (List)

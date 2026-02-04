@@ -1,4 +1,3 @@
-{-# OPTIONS --guardedness #-}
 module Thread where
 
 open import Data.Nat using (ℕ)
