@@ -8,7 +8,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Tree using (Tree; MkTree)
 open import AllSubtrees using (AllSubtrees)
-open import AllPaths using (AllPaths; here; there)
+open import AllPaths using (AllPaths; here; there; bindAllPaths)
 
 -- An infinite tree of alternating booleans, a much simplified practice version
 -- of an infinite tree of program states. As a simplified version of proving
@@ -21,19 +21,34 @@ boolTreeStep b = not b ∷ []
 boolTree : Bool → Tree Bool
 boolTree b = MkTree boolTreeStep b
 
--- true occurs after a finite number of steps
+-- false occurs after a finite number of steps
+eventuallyFalseFrom
+  : (b : Bool)
+  → AllPaths boolTreeStep (λ x → x ≡ false) b
+eventuallyFalseFrom true
+  = there (here refl ∷ [])
+eventuallyFalseFrom false
+  = here refl
+
+-- true occurs exactly from false (in one step)
+exactlyTrueFromFalse
+  : (b : Bool)
+  → b ≡ false
+  → AllPaths boolTreeStep (λ x → x ≡ true) b
+exactlyTrueFromFalse false refl
+  = there (here refl ∷ [])
+
+-- true occurs after a finite number of steps (using bindAllPaths)
 eventuallyTrueFrom
   : (b : Bool)
-  → AllPaths boolTreeStep (_≡_ true) b
-eventuallyTrueFrom true
-  = here refl
-eventuallyTrueFrom false
-  = there (here refl ∷ [])
+  → AllPaths boolTreeStep (λ x → x ≡ true) b
+eventuallyTrueFrom b
+  = bindAllPaths (eventuallyFalseFrom b) exactlyTrueFromFalse
 
 -- from any node, true occurs after a finite number of steps
 eventuallyTrueFromAnywhere
   : (b : Bool)
-  → AllSubtrees boolTreeStep (AllPaths boolTreeStep (_≡_ true)) b
+  → AllSubtrees boolTreeStep (AllPaths boolTreeStep (λ x → x ≡ true)) b
 AllSubtrees.trueHere (eventuallyTrueFromAnywhere b)
   = eventuallyTrueFrom b
 AllSubtrees.trueThere (eventuallyTrueFromAnywhere b)

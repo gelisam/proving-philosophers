@@ -16,6 +16,9 @@ open import Thread using (Thread; MkThread)
 open import Program using (Program; MkProgram)
 open import TrustedBase.Render using (render-program)
 
+-- Import Practice.agda to ensure it is type-checked
+import Practice
+
 -- an Agda representation of rust/main.rs, so we can prove things about it.
 
 threads : List Thread
