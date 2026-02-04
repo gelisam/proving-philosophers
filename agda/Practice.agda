@@ -30,7 +30,7 @@ eventuallyFalseFrom true
 eventuallyFalseFrom false
   = here refl
 
--- true occurs exactly from false (in one step)
+-- true occurs a finite number of steps after false (one step actually)
 exactlyTrueFromFalse
   : (b : Bool)
   → b ≡ false
