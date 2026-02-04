@@ -1,7 +1,7 @@
 {-# OPTIONS --guardedness #-}
 module Practice where
 
-open import Data.Bool using (Bool; true; false; not; T)
+open import Data.Bool using (Bool; true; false; not; T; if_then_else_; _∧_)
 open import Data.List.Base using (List; []; _∷_)
 open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Data.Nat using (ℕ; zero; suc)
@@ -17,21 +17,22 @@ open import AllPaths using (AllPaths; here; there; _>>=_)
 -- that no philosopher starves, we want to prove that true occurs infinitely
 -- often.
 
+-- Boolean equality function
+_==_ : Bool → Bool → Bool
+true  == true  = true
+false == false = true
+_     == _     = false
 
 boolTreeStep : Bool × Bool → List (Bool × Bool)
-boolTreeStep (false , false)
-  = (true , false)
-  ∷ (false , true)
-  ∷ []
-boolTreeStep (false , true)
-  = (true , true)
-  ∷ []
-boolTreeStep (true , false)
-  = (true , true)
-  ∷ []
-boolTreeStep (true , true)
-  = (false , false)
-  ∷ []
+boolTreeStep (b₁ , b₂)
+  = if (b₁ == false) ∧ (b₂ == false)
+    then (true , false) ∷ (false , true) ∷ []
+    else if (b₁ == false) ∧ (b₂ == true)
+    then (true , true) ∷ []
+    else if (b₁ == true) ∧ (b₂ == false)
+    then (true , true) ∷ []
+    else -- (b₁ == true) ∧ (b₂ == true)
+      (false , false) ∷ []
 
 boolTree : Bool × Bool → Tree (Bool × Bool)
 boolTree bb = MkTree boolTreeStep bb
