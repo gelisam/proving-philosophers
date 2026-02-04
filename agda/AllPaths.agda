@@ -1,7 +1,7 @@
 module AllPaths where
 
-open import Data.List.Base using (List)
-open import Data.List.Relation.Unary.All using (All)
+open import Data.List.Base using (List; []; _∷_)
+open import Data.List.Relation.Unary.All using (All; []; _∷_)
 
 open import Tree using (Tree; StepFun; value; childValues)
 
@@ -20,3 +20,22 @@ data AllPaths {A : Set} (f : StepFun A) (P : A → Set) (a : A) : Set where
   there
     : All (AllPaths f P) (f a)
     → AllPaths f P a
+
+-- Combinator for chaining AllPaths proofs (uses mutual recursion)
+mutual
+  bindAllPaths
+    : {A : Set} {f : StepFun A} {P Q : A → Set} {a : A}
+    → AllPaths f P a
+    → ((x : A) → P x → AllPaths f Q x)
+    → AllPaths f Q a
+  bindAllPaths (here px) k = k _ px
+  bindAllPaths (there aps) k = there (bindAllPaths-all aps k)
+
+  -- Helper function for mapping bindAllPaths over All
+  bindAllPaths-all
+    : {A : Set} {f : StepFun A} {P Q : A → Set} {as : List A}
+    → All (AllPaths f P) as
+    → ((x : A) → P x → AllPaths f Q x)
+    → All (AllPaths f Q) as
+  bindAllPaths-all [] k = []
+  bindAllPaths-all (ap ∷ aps) k = bindAllPaths ap k ∷ bindAllPaths-all aps k
