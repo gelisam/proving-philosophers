@@ -39,3 +39,11 @@ mutual
     → All (AllPaths f Q) as
   bindAllPaths-all [] k = []
   bindAllPaths-all (ap ∷ aps) k = bindAllPaths ap k ∷ bindAllPaths-all aps k
+
+_>>=_
+  : {A : Set} {f : StepFun A} {P Q : A → Set} {a : A}
+  → AllPaths f P a
+  → ((x : A) → P x → AllPaths f Q x)
+  → AllPaths f Q a
+_>>=_ = bindAllPaths
+infixl 5 _>>=_

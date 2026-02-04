@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Tree using (Tree; MkTree)
 open import AllSubtrees using (AllSubtrees)
-open import AllPaths using (AllPaths; here; there; bindAllPaths)
+open import AllPaths using (AllPaths; here; there; _>>=_)
 
 -- An infinite tree of alternating booleans, a much simplified practice version
 -- of an infinite tree of program states. As a simplified version of proving
@@ -98,8 +98,6 @@ eventuallyZeroFalsesFrom
   : (bb : Bool × Bool)
   → AllPaths boolTreeStep (CapFalses 0) bb
 eventuallyZeroFalsesFrom bb
-  = bindAllPaths
-      (bindAllPaths
-        (eventuallyTwoFalsesFrom bb)
-        eventuallyOneFalseFromTwoFalses)
-      eventuallyZeroFalsesFromOneFalse
+    = eventuallyTwoFalsesFrom bb
+  >>= eventuallyOneFalseFromTwoFalses
+  >>= eventuallyZeroFalsesFromOneFalse
