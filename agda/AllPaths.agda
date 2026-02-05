@@ -24,32 +24,32 @@ data AllPaths {A : Set} (f : StepFun A) (P : A → Set) (a : A) : Set where
 
 -- Combinator for chaining AllPaths proofs (uses mutual recursion)
 mutual
-  bindAllPaths
+  AllPaths-bind
     : {A : Set} {f : StepFun A} {P Q : A → Set} {a : A}
     → AllPaths f P a
     → ((x : A) → P x → AllPaths f Q x)
     → AllPaths f Q a
-  bindAllPaths (here px) k
+  AllPaths-bind (here px) k
     = k _ px
-  bindAllPaths (there aps) k
-    = there (bindAllPaths-all aps k)
+  AllPaths-bind (there aps) k
+    = there (All-AllPaths-bind aps k)
 
   -- Helper function for mapping bindAllPaths over All
-  bindAllPaths-all
+  All-AllPaths-bind
     : {A : Set} {f : StepFun A} {P Q : A → Set} {as : List A}
     → All1 (AllPaths f P) as
     → ((x : A) → P x → AllPaths f Q x)
     → All1 (AllPaths f Q) as
-  bindAllPaths-all [ ap ] k
-    = [ bindAllPaths ap k ]
-  bindAllPaths-all (ap ∷ aps) k
-    = bindAllPaths ap k
-    ∷ bindAllPaths-all aps k
+  All-AllPaths-bind [ ap ] k
+    = [ AllPaths-bind ap k ]
+  All-AllPaths-bind (ap ∷ aps) k
+    = AllPaths-bind ap k
+    ∷ All-AllPaths-bind aps k
 
 _>>=_
   : {A : Set} {f : StepFun A} {P Q : A → Set} {a : A}
   → AllPaths f P a
   → ((x : A) → P x → AllPaths f Q x)
   → AllPaths f Q a
-_>>=_ = bindAllPaths
+_>>=_ = AllPaths-bind
 infixl 5 _>>=_
