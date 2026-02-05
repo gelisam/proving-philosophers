@@ -63,7 +63,7 @@ data CapZeroes : ℕ → ℕ × ℕ → Set where
     : ∀ {n₂}
     → n₂ ≤ 1
     → CapZeroes 1 (1 , n₂)
-  two
+  atMostTwo
     : ∀ {n₁ n₂}
     → n₁ ≤ 1
     → n₂ ≤ 1
@@ -81,16 +81,16 @@ eventuallyOneZeroFromTwoZeroes
   → AllPaths natTreeStep (CapZeroes 1) nn
 eventuallyOneZeroFromTwoZeroes nn (or-fewer cap)
   = here cap
-eventuallyOneZeroFromTwoZeroes (.0 , .0) (two z≤n z≤n)
+eventuallyOneZeroFromTwoZeroes (.0 , .0) (atMostTwo z≤n z≤n)
   = there
   ( here (atMostOne2 0≤1)
   ∷ [ here (atMostOne1 0≤1) ]
   )
-eventuallyOneZeroFromTwoZeroes (.0 , .1) (two z≤n (s≤s z≤n))
+eventuallyOneZeroFromTwoZeroes (.0 , .1) (atMostTwo z≤n (s≤s z≤n))
   = here (atMostOne1 0≤1)
-eventuallyOneZeroFromTwoZeroes (.1 , .0) (two (s≤s z≤n) z≤n)
+eventuallyOneZeroFromTwoZeroes (.1 , .0) (atMostTwo (s≤s z≤n) z≤n)
   = here (atMostOne2 0≤1)
-eventuallyOneZeroFromTwoZeroes (1 , 1) (two (s≤s z≤n) (s≤s z≤n))
+eventuallyOneZeroFromTwoZeroes (1 , 1) (atMostTwo (s≤s z≤n) (s≤s z≤n))
   = here (or-fewer zero)
 
 eventuallyZeroZeroesFromOneZero
@@ -112,5 +112,5 @@ eventuallyZeroZeroesFromOneZero (.1 , .1) (atMostOne2 (s≤s z≤n))
 eventuallyZeroZeroesFromTwoZeroes
   : AllPaths natTreeStep (CapZeroes 0) (0 , 0)
 eventuallyZeroZeroesFromTwoZeroes
-    = eventuallyOneZeroFromTwoZeroes (0 , 0) (two z≤n z≤n)
+    = eventuallyOneZeroFromTwoZeroes (0 , 0) (atMostTwo z≤n z≤n)
   >>= eventuallyZeroZeroesFromOneZero
