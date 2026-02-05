@@ -18,50 +18,6 @@ open import AllPaths using (AllPaths; here; there; _>>=_)
 -- practice version of an infinite tree of program states. As a simplified
 -- version of proving that no philosopher starves, we want to prove that 1
 -- occurs infinitely often.
---
--- CONVERSION FROM Bool TO Nat (0 and 1):
--- ======================================
---
--- This file was converted from using Bool to using Nat, with zero representing
--- false and (suc zero) representing true. Crucially, we do NOT use Fin 2 to
--- restrict the values, so the type system allows arbitrary natural numbers.
---
--- CHALLENGES ENCOUNTERED:
--- ----------------------
---
--- 1. **Data Type Complexity**: The CapZeros data type became more complex because
---    it must handle all possible Nat values, not just 0 and 1. With Bool, we had
---    only two constructors (true and false). With Nat, we have infinitely many
---    values (0, 1, 2, 3, ...).
---
--- 2. **Constructor Design**: Instead of simple pattern matching like (b₁ , true),
---    we needed constructors that use inequality proofs (n₂ ≢ zero) to express
---    "at most one zero". This makes the constructors more verbose.
---
--- 3. **Proof Complexity**: Each proof function needed many more cases:
---    - eventuallyTwoZerosFrom: 4 cases with Bool → 11 cases with Nat
---    - eventuallyZeroZerosFromOneZero: 4 cases → 16 cases (including absurd patterns)
---
--- 4. **Absurd Patterns**: We needed ⊥-elim to handle impossible cases where
---    the pattern conflicts with the constructor's precondition (e.g., matching
---    on (zero , zero) when we have atMostOne1 prf that requires n₂ ≢ zero).
---
--- 5. **Invalid States**: The natTreeStep function has a catch-all pattern that
---    returns [] for values >= 2. This creates additional proof obligations for
---    states that will never actually occur in the tree, but the type system
---    doesn't know they're unreachable.
---
--- CONCLUSION:
--- ----------
--- The fact that not all Nats can occur (we only use 0 and 1) makes the proofs
--- significantly harder because:
--- - The type system can't enforce that only 0 and 1 are used
--- - We must prove properties for ALL Nat values, even unreachable ones
--- - More cases, more complex constructors, and more proof obligations
---
--- Using Fin 2 would solve these problems by restricting the type to exactly
--- two values, making it isomorphic to Bool.
-
 
 natTreeStep : ℕ × ℕ → List (ℕ × ℕ)
 natTreeStep (zero , zero)
@@ -82,10 +38,7 @@ natTreeStep _ = []  -- catch-all for invalid states (neither 0 nor 1)
 natTree : ℕ × ℕ → Tree (ℕ × ℕ)
 natTree nn = MkTree natTreeStep nn
 
--- Proof that a ℕ × ℕ has at most n zeros (counting only occurrences of the value 0)
--- Note: Since we're using ℕ instead of Bool or Fin, we must handle all possible Nat values.
--- The key difficulty: with Bool we had only 2 values, with Nat we have infinitely many.
--- We define what "at most n zeros" means for any Nat pair.
+-- Proof that a ℕ × ℕ has at most n zeros
 data CapZeros : ℕ → ℕ × ℕ → Set where
   or-fewer
     : ∀ {n nn}
