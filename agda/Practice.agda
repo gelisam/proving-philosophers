@@ -7,9 +7,9 @@ open import Data.Product using (_×_; _,_; proj₁)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import All1 using (All1; [_]; _∷_)
-open import AllPaths using (AllPaths; here; there; _>>=_)
-open import AllSubtrees using (AllSubtrees)
 open import Tree using (Tree; MkTree)
+import AllPaths using (AllPaths; here; there; _>>=_)
+import AllSubtrees using (AllSubtrees)
 
 -- A much simplified version of the infinite tree of program states which we
 -- want to use for the Dining Philosophers problem. In this simplified version,
@@ -47,6 +47,9 @@ natTreeStep _
 natTree : ℕ × ℕ → Tree (ℕ × ℕ)
 natTree nn = MkTree natTreeStep nn
 
+open AllPaths natTreeStep
+open AllSubtrees natTreeStep
+
 -- Proof that a ℕ × ℕ has at most n 0s and the rest are 1s.
 data CapZeroes : ℕ → ℕ × ℕ → Set where
   or-fewer
@@ -78,7 +81,7 @@ data CapZeroes : ℕ → ℕ × ℕ → Set where
 eventuallyOneZeroFromTwoZeroes
   : (nn : ℕ × ℕ)
   → CapZeroes 2 nn
-  → AllPaths natTreeStep (CapZeroes 1) nn
+  → AllPaths (CapZeroes 1) nn
 eventuallyOneZeroFromTwoZeroes nn (or-fewer cap)
   = here cap
 eventuallyOneZeroFromTwoZeroes (.0 , .0) (atMostTwo z≤n z≤n)
@@ -96,7 +99,7 @@ eventuallyOneZeroFromTwoZeroes (1 , 1) (atMostTwo (s≤s z≤n) (s≤s z≤n))
 eventuallyZeroZeroesFromOneZero
   : (nn : ℕ × ℕ)
   → CapZeroes 1 nn
-  → AllPaths natTreeStep (CapZeroes 0) nn
+  → AllPaths (CapZeroes 0) nn
 eventuallyZeroZeroesFromOneZero nn (or-fewer cap)
   = here cap
 eventuallyZeroZeroesFromOneZero (.0 , .1) (atMostOne1 z≤n)
@@ -110,7 +113,7 @@ eventuallyZeroZeroesFromOneZero (.1 , .1) (atMostOne2 (s≤s z≤n))
 
 -- (1 , 1) occurs after a finite number of steps
 eventuallyZeroZeroesFromTwoZeroes
-  : AllPaths natTreeStep (CapZeroes 0) (0 , 0)
+  : AllPaths (CapZeroes 0) (0 , 0)
 eventuallyZeroZeroesFromTwoZeroes
     = eventuallyOneZeroFromTwoZeroes (0 , 0) (atMostTwo z≤n z≤n)
   >>= eventuallyZeroZeroesFromOneZero
