@@ -10,6 +10,7 @@ open import All1 using (All1; [_]; _∷_)
 open import Tree using (Tree; MkTree)
 import AllPaths using (AllPaths; here; there; _>>=_)
 import AllSubtrees using (AllSubtrees)
+import InfinitelyOften using (InfinitelyOften)
 
 -- A much simplified version of the infinite tree of program states which we
 -- want to use for the Dining Philosophers problem. In this simplified version,
@@ -49,6 +50,16 @@ natTree nn = MkTree natTreeStep nn
 
 open AllPaths natTreeStep
 open AllSubtrees natTreeStep
+open InfinitelyOften natTreeStep
+
+ProblemStatement : Set
+ProblemStatement
+  = InfinitelyOften (_≡_ (1 , 1)) (0 , 0)
+
+
+-- We will first prove that starting from two zeroes (0 , 0), we eventually
+-- reach a position with at most one zero, then finally, a position with no
+-- zeroes (1 , 1).
 
 -- Proof that a ℕ × ℕ has at most n 0s and the rest are 1s.
 data CapZeroes : ℕ → ℕ × ℕ → Set where
