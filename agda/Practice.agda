@@ -3,14 +3,14 @@ module Practice where
 
 open import Data.Bool using (Bool; true; false; not; T)
 open import Data.List.Base using (List; []; _∷_)
-open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; proj₁)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import Tree using (Tree; MkTree)
-open import AllSubtrees using (AllSubtrees)
+open import All1 using (All1; [_]; _∷_)
 open import AllPaths using (AllPaths; here; there; _>>=_)
+open import AllSubtrees using (AllSubtrees)
+open import Tree using (Tree; MkTree)
 
 -- An infinite tree of alternating booleans, a much simplified practice version
 -- of an infinite tree of program states. As a simplified version of proving
@@ -74,8 +74,7 @@ eventuallyOneFalseFromTwoFalses bb (or-fewer cap)
 eventuallyOneFalseFromTwoFalses (.false , .false) two
   = there
   ( here atMostOne2
-  ∷ here atMostOne1
-  ∷ []
+  ∷ [ here atMostOne1 ]
   )
 
 eventuallyZeroFalsesFromOneFalse
@@ -85,11 +84,11 @@ eventuallyZeroFalsesFromOneFalse
 eventuallyZeroFalsesFromOneFalse bb (or-fewer cap)
   = here cap
 eventuallyZeroFalsesFromOneFalse (false , .true) atMostOne1
-  = there (here zero ∷ [])
+  = there [ here zero ]
 eventuallyZeroFalsesFromOneFalse (true , .true) atMostOne1
   = here zero
 eventuallyZeroFalsesFromOneFalse ( .true , false) atMostOne2
-  = there (here zero ∷ [])
+  = there [ here zero ]
 eventuallyZeroFalsesFromOneFalse ( .true , true) atMostOne2
   = here zero
 
