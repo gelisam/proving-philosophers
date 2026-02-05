@@ -1,9 +1,8 @@
 {-# OPTIONS --guardedness #-}
 module Practice where
 
-open import Data.Bool using (Bool; true; false; not; T)
 open import Data.List.Base using (List; []; _∷_)
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n; s≤s)
 open import Data.Product using (_×_; _,_; proj₁)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
@@ -12,91 +11,96 @@ open import AllPaths using (AllPaths; here; there; _>>=_)
 open import AllSubtrees using (AllSubtrees)
 open import Tree using (Tree; MkTree)
 
--- An infinite tree of alternating booleans, a much simplified practice version
--- of an infinite tree of program states. As a simplified version of proving
--- that no philosopher starves, we want to prove that true occurs infinitely
--- often.
+-- An infinite tree of alternating natural numbers (0 and 1), a much simplified
+-- practice version of an infinite tree of program states. As a simplified
+-- version of proving that no philosopher starves, we want to prove that 1
+-- occurs infinitely often.
 
+natTreeStep : ℕ × ℕ → List (ℕ × ℕ)
+natTreeStep (0 , 0)
+  = (1 , 0)
+  ∷ (0 , 1)
+  ∷ []
+natTreeStep (0 , 1)
+  = (1 , 1)
+  ∷ []
+natTreeStep (1 , 0)
+  = (1 , 1)
+  ∷ []
+natTreeStep (1 , 1)
+  = (0 , 0)
+  ∷ []
+natTreeStep _
+  = (2 , 2)
+  ∷ []
 
-boolTreeStep : Bool × Bool → List (Bool × Bool)
-boolTreeStep (false , false)
-  = (true , false)
-  ∷ (false , true)
-  ∷ []
-boolTreeStep (false , true)
-  = (true , true)
-  ∷ []
-boolTreeStep (true , false)
-  = (true , true)
-  ∷ []
-boolTreeStep (true , true)
-  = (false , false)
-  ∷ []
+natTree : ℕ × ℕ → Tree (ℕ × ℕ)
+natTree nn = MkTree natTreeStep nn
 
-boolTree : Bool × Bool → Tree (Bool × Bool)
-boolTree bb = MkTree boolTreeStep bb
-
--- Proof that a Bool × Bool has at most n falses
-data CapFalses : ℕ → Bool × Bool → Set where
+-- Proof that a ℕ × ℕ has at most n 0s and the rest are 1s.
+data CapZeroes : ℕ → ℕ × ℕ → Set where
   or-fewer
-    : ∀ {n bb}
-    → CapFalses n bb
-    → CapFalses (suc n) bb
+    : ∀ {n nn}
+    → CapZeroes n nn
+    → CapZeroes (suc n) nn
   zero
-    : CapFalses 0 (true , true)
+    : CapZeroes 0 (1 , 1)
   atMostOne1
-    : ∀ {b₁}
-    → CapFalses 1 (b₁ , true)
+    : ∀ {n₁}
+    → n₁ ≤ 1
+    → CapZeroes 1 (n₁ , 1)
   atMostOne2
-    : ∀ {b₂}
-    → CapFalses 1 (true , b₂)
+    : ∀ {n₂}
+    → n₂ ≤ 1
+    → CapZeroes 1 (1 , n₂)
   two
-    : CapFalses 2 (false , false)
+    : ∀ {n₁ n₂}
+    → n₁ ≤ 1
+    → n₂ ≤ 1
+    → CapZeroes 2 (n₁ , n₂)
 
-eventuallyTwoFalsesFrom
-  : (bb : Bool × Bool)
-  → AllPaths boolTreeStep (CapFalses 2) bb
-eventuallyTwoFalsesFrom (false , false)
-  = here two
-eventuallyTwoFalsesFrom (false , true)
-  = here (or-fewer atMostOne1)
-eventuallyTwoFalsesFrom (true , false)
-  = here (or-fewer atMostOne2)
-eventuallyTwoFalsesFrom (true , true)
-  = here (or-fewer (or-fewer zero))
+0≤1 : 0 ≤ 1
+0≤1 = z≤n
 
-eventuallyOneFalseFromTwoFalses
-  : (bb : Bool × Bool)
-  → CapFalses 2 bb
-  → AllPaths boolTreeStep (CapFalses 1) bb
-eventuallyOneFalseFromTwoFalses bb (or-fewer cap)
+1≤1 : 1 ≤ 1
+1≤1 = s≤s z≤n
+
+eventuallyOneZeroFromTwoZeroes
+  : (nn : ℕ × ℕ)
+  → CapZeroes 2 nn
+  → AllPaths natTreeStep (CapZeroes 1) nn
+eventuallyOneZeroFromTwoZeroes nn (or-fewer cap)
   = here cap
-eventuallyOneFalseFromTwoFalses (.false , .false) two
+eventuallyOneZeroFromTwoZeroes (.0 , .0) (two z≤n z≤n)
   = there
-  ( here atMostOne2
-  ∷ [ here atMostOne1 ]
+  ( here (atMostOne2 0≤1)
+  ∷ [ here (atMostOne1 0≤1) ]
   )
+eventuallyOneZeroFromTwoZeroes (.0 , .1) (two z≤n (s≤s z≤n))
+  = here (atMostOne1 0≤1)
+eventuallyOneZeroFromTwoZeroes (.1 , .0) (two (s≤s z≤n) z≤n)
+  = here (atMostOne2 0≤1)
+eventuallyOneZeroFromTwoZeroes (1 , 1) (two (s≤s z≤n) (s≤s z≤n))
+  = here (or-fewer zero)
 
-eventuallyZeroFalsesFromOneFalse
-  : (bb : Bool × Bool)
-  → CapFalses 1 bb
-  → AllPaths boolTreeStep (CapFalses 0) bb
-eventuallyZeroFalsesFromOneFalse bb (or-fewer cap)
+eventuallyZeroZeroesFromOneZero
+  : (nn : ℕ × ℕ)
+  → CapZeroes 1 nn
+  → AllPaths natTreeStep (CapZeroes 0) nn
+eventuallyZeroZeroesFromOneZero nn (or-fewer cap)
   = here cap
-eventuallyZeroFalsesFromOneFalse (false , .true) atMostOne1
+eventuallyZeroZeroesFromOneZero (.0 , .1) (atMostOne1 z≤n)
   = there [ here zero ]
-eventuallyZeroFalsesFromOneFalse (true , .true) atMostOne1
+eventuallyZeroZeroesFromOneZero (.1 , .1) (atMostOne1 (s≤s z≤n))
   = here zero
-eventuallyZeroFalsesFromOneFalse ( .true , false) atMostOne2
+eventuallyZeroZeroesFromOneZero (.1 , .0) (atMostOne2 z≤n)
   = there [ here zero ]
-eventuallyZeroFalsesFromOneFalse ( .true , true) atMostOne2
+eventuallyZeroZeroesFromOneZero (.1 , .1) (atMostOne2 (s≤s z≤n))
   = here zero
 
--- (true , true) occurs after a finite number of steps
-eventuallyZeroFalsesFrom
-  : (bb : Bool × Bool)
-  → AllPaths boolTreeStep (CapFalses 0) bb
-eventuallyZeroFalsesFrom bb
-    = eventuallyTwoFalsesFrom bb
-  >>= eventuallyOneFalseFromTwoFalses
-  >>= eventuallyZeroFalsesFromOneFalse
+-- (1 , 1) occurs after a finite number of steps
+eventuallyZeroZeroesFromTwoZeroes
+  : AllPaths natTreeStep (CapZeroes 0) (0 , 0)
+eventuallyZeroZeroesFromTwoZeroes
+    = eventuallyOneZeroFromTwoZeroes (0 , 0) (two z≤n z≤n)
+  >>= eventuallyZeroZeroesFromOneZero
