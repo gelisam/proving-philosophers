@@ -11,10 +11,20 @@ open import AllPaths using (AllPaths; here; there; _>>=_)
 open import AllSubtrees using (AllSubtrees)
 open import Tree using (Tree; MkTree)
 
--- An infinite tree of alternating natural numbers (0 and 1), a much simplified
--- practice version of an infinite tree of program states. As a simplified
--- version of proving that no philosopher starves, we want to prove that 1
--- occurs infinitely often.
+-- A much simplified version of the infinite tree of program states which we
+-- want to use for the Dining Philosophers problem. In this simplified version,
+-- the state is a pair of natural numbers which can each be either 0 or 1. At
+-- each step, either of the numbers can increment (0 → 1), and when both are 1,
+-- they both reset to 0.
+--
+-- >      (0 , 0)
+-- >       /   \
+-- > (1 , 0)   (0 , 1)
+-- >       \   /
+-- >      (1 , 1)
+--
+-- As a practice for proving that no philosopher starves, we want to prove that
+-- the (1 , 1) state occurs infinitely often.
 
 natTreeStep : ℕ × ℕ → List (ℕ × ℕ)
 natTreeStep (0 , 0)
