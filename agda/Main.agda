@@ -19,6 +19,9 @@ open import TrustedBase.Render using (render-program)
 -- Import Practice.agda to ensure it is type-checked
 import Practice
 
+-- Import Partition.agda to ensure it is type-checked
+import Partition
+
 -- an Agda representation of rust/main.rs, so we can prove things about it.
 
 threads : List Thread
