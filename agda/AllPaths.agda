@@ -22,7 +22,30 @@ data AllPaths (P : A → Set) (a : A) : Set where
     : All1 (AllPaths P) (f a)
     → AllPaths P a
 
--- Combinator for chaining AllPaths proofs (uses mutual recursion)
+mutual
+  AllPaths-map
+    : {P Q : A → Set}
+    → ((x : A) → P x → Q x)
+    → (a : A)
+    → AllPaths P a
+    → AllPaths Q a
+  AllPaths-map p2q a (here pa)
+    = here (p2q a pa)
+  AllPaths-map p2q a (there aps)
+    = there (All-AllPaths-map p2q (f a) aps)
+
+  All-AllPaths-map
+    : {P Q : A → Set}
+    → ((x : A) → P x → Q x)
+    → (xs : List A)
+    → All1 (AllPaths P) xs
+    → All1 (AllPaths Q) xs
+  All-AllPaths-map p2q _ [ ap ]
+    = [ AllPaths-map p2q _ ap ]
+  All-AllPaths-map p2q _ (ap ∷ aps)
+    = AllPaths-map p2q _ ap
+    ∷ All-AllPaths-map p2q _ aps
+
 mutual
   AllPaths-bind
     : {P Q : A → Set} {a : A}

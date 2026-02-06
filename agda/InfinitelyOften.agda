@@ -18,3 +18,12 @@ InfinitelyOften
   → Set
 InfinitelyOften P a
   = AllSubtrees (AllPaths P) a
+
+infinitelyOften
+  : {P Q : A → Set}
+  → ((x : A) → P x → AllPaths Q x)
+  → (a : A)
+  → AllSubtrees P a
+  → InfinitelyOften Q a
+infinitelyOften p2q a allSubtrees
+  = AllSubtrees-map p2q a allSubtrees
