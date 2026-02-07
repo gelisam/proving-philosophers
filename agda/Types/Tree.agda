@@ -1,4 +1,4 @@
-module Tree where
+module Types.Tree where
 
 open import Data.List.Base using (List)
 

@@ -9,11 +9,11 @@ open import Data.String.Base as Str using () renaming (_++_ to _+++_)
 open import IO.Base using (Main; run)
 open import IO.Finite using (putStr)
 
-import Syntax
-open import Fork using (Fork; MkFork)
-open import Stmt using (ThinkRandomly; LockFork; EatRandomly)
-open import Thread using (Thread; MkThread)
-open import Program using (Program; MkProgram)
+import Types.Syntax
+open import Types.Fork using (Fork; MkFork)
+open import Types.Stmt using (ThinkRandomly; LockFork; EatRandomly)
+open import Types.Thread using (Thread; MkThread)
+open import Types.Program using (Program; MkProgram)
 open import TrustedBase.Render using (render-program)
 
 -- Import Practice.agda to ensure it is type-checked
@@ -61,4 +61,4 @@ program = MkProgram 5 threads
 -- Render the Agda representation of the Rust code to actual Rust code, so the
 -- caller can verify that our proof is about the right program.
 main : Main
-main = run (putStr (Syntax.render (render-program program)))
+main = run (putStr (Types.Syntax.render (render-program program)))
