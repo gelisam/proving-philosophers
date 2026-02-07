@@ -7,11 +7,11 @@ open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n; s≤s)
 open import Data.Product using (_×_; _,_; proj₁)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import All1 using (All1; [_]; _∷_)
-open import Tree using (Tree; MkTree)
-import AllPaths using (AllPaths; here; there; AllPaths-map; _>>=_)
-import AllSubtrees using (AllSubtrees)
-import InfinitelyOften using (InfinitelyOften; infinitelyOften)
+open import Types.All1 using (All1; [_]; _∷_)
+open import Types.Tree using (Tree; MkTree)
+import Types.AllPaths using (AllPaths; here; there; AllPaths-map; _>>=_)
+import Types.AllSubtrees using (AllSubtrees)
+import Types.InfinitelyOften using (InfinitelyOften; infinitelyOften)
 
 -- A much simplified version of the infinite tree of program states which we
 -- want to use for the Dining Philosophers problem. In this simplified version,
@@ -49,9 +49,9 @@ natTreeStep _
 natTree : ℕ × ℕ → Tree (ℕ × ℕ)
 natTree nn = MkTree natTreeStep nn
 
-open AllPaths natTreeStep
-open AllSubtrees natTreeStep
-open InfinitelyOften natTreeStep
+open Types.AllPaths natTreeStep
+open Types.AllSubtrees natTreeStep
+open Types.InfinitelyOften natTreeStep
 
 ProblemStatement : Set
 ProblemStatement

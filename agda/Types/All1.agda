@@ -1,4 +1,4 @@
-module All1 where
+module Types.All1 where
 
 open import Data.List.Base using (List; []; _∷_)
 

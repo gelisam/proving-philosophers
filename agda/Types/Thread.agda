@@ -1,9 +1,9 @@
-module Thread where
+module Types.Thread where
 
 open import Data.Nat using (ℕ)
 open import Data.List.Base using (List)
 
-open import Stmt using (Stmt)
+open import Types.Stmt using (Stmt)
 
 -- For representing Rust code fragment like
 --

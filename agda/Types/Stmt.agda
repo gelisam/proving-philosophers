@@ -1,8 +1,8 @@
-module Stmt where
+module Types.Stmt where
 
 open import Data.Nat using (ℕ)
 
-open import Fork using (Fork)
+open import Types.Fork using (Fork)
 
 -- For representing Rust code fragment like
 --
