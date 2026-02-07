@@ -8,6 +8,7 @@ open import Data.Product using (_×_; _,_; ∃-syntax)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Types.All1 using (All1; [_]; _∷_)
+open import Types.Readability using (starting-at_knowing_apply)
 open import Types.Tree using (Tree; MkTree)
 import Types.AllPaths using (AllPaths; here; there; AllPaths-map; _>>=_)
 import Types.AllSubtrees using (AllSubtrees; AllSubtrees-induction)
@@ -109,10 +110,12 @@ stepPreservesSomeStepsLeft .(1 , 1) (_ , zero)
 alwaysSomeStepsLeft
   : AllSubtrees SomeStepsLeft initialPosition
 alwaysSomeStepsLeft
-  = AllSubtrees-induction
-      stepPreservesSomeStepsLeft
+  = starting-at
       initialPosition
+    knowing
       initiallySomeStepsLeft
+    apply
+      (AllSubtrees-induction stepPreservesSomeStepsLeft)
 
 eventuallyZeroStepsLeft
   : (n : ℕ)
@@ -145,15 +148,19 @@ eventuallyOneOne
   → SomeStepsLeft nn
   → AllPaths IsOneOne nn
 eventuallyOneOne nn (n , stepsLeft)
-  = AllPaths-map
-      zeroStepsMeansOneOne
+  = starting-at
       nn
+    knowing
       (eventuallyZeroStepsLeft n nn stepsLeft)
+    apply
+      (AllPaths-map zeroStepsMeansOneOne)
 
 -- (1 , 1) occurs infinitely-often
 mainProof : ProblemStatement
 mainProof
-  = infinitelyOften
-      eventuallyOneOne
+  = starting-at
       initialPosition
+    knowing
       alwaysSomeStepsLeft
+    apply
+      (infinitelyOften eventuallyOneOne)
