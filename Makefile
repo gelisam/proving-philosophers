@@ -10,14 +10,14 @@ clobber: clobber-agda clobber-rust
 # Agda-related targets
 
 build-agda: agda-build/Main
-agda-build/Main: agda/Main.agda
+agda-build/Main: agda/*.agda agda/Types/*.agda agda/TrustedBase/*.agda
 	mkdir -p agda-build
 	agda \
 	  --compile \
 	  --library standard-library \
 	  --include-path agda \
 	  --compile-dir=agda-build \
-		$<
+		agda/Main.agda
 
 run-agda: agda-build/Main
 	./agda-build/Main

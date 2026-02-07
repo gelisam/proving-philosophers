@@ -3,14 +3,14 @@ module Practice where
 
 open import Data.List.Base using (List; []; _∷_)
 open import Data.List.Relation.Unary.All using (All; []; _∷_)
-open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n; s≤s)
-open import Data.Product using (_×_; _,_; proj₁)
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; ∃-syntax)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Types.All1 using (All1; [_]; _∷_)
 open import Types.Tree using (Tree; MkTree)
 import Types.AllPaths using (AllPaths; here; there; AllPaths-map; _>>=_)
-import Types.AllSubtrees using (AllSubtrees)
+import Types.AllSubtrees using (AllSubtrees; AllSubtrees-induction)
 import Types.InfinitelyOften using (InfinitelyOften; infinitelyOften)
 
 -- A much simplified version of the infinite tree of program states which we
@@ -53,132 +53,107 @@ open Types.AllPaths natTreeStep
 open Types.AllSubtrees natTreeStep
 open Types.InfinitelyOften natTreeStep
 
+IsOneOne
+  : ℕ × ℕ → Set
+IsOneOne nn
+  = nn ≡ (1 , 1)
+
+initialPosition
+  : ℕ × ℕ
+initialPosition
+  = (0 , 0)
+
 ProblemStatement : Set
 ProblemStatement
-  = InfinitelyOften (_≡_ (1 , 1)) (0 , 0)
+  = InfinitelyOften IsOneOne initialPosition
 
 
--- We will first prove that starting from two zeroes (0 , 0), we eventually
--- reach a position with at most one zero, then finally, a position with no
--- zeroes (1 , 1).
+-- We want to prove that from any position, we will reach (0 , 0) after a finite
+-- number of steps. We will first calculate a finite StepsLeft value for every
+-- position, and then show that for a position with @StepsLeft n@, we will reach
+-- (0 , 0) after a finite number of steps, namely @n@.
 
--- Proof that a ℕ × ℕ has at most n 0s and the rest are 1s.
-data CapZeroes : ℕ → ℕ × ℕ → Set where
+data StepsLeft : ℕ → ℕ × ℕ → Set where
   zero
-    : CapZeroes 0 (1 , 1)
-  atMostOne1
-    : ∀ {n₁}
-    → n₁ ≤ 1
-    → CapZeroes 1 (n₁ , 1)
-  atMostOne2
-    : ∀ {n₂}
-    → n₂ ≤ 1
-    → CapZeroes 1 (1 , n₂)
-  atMostTwo
-    : ∀ {n₁ n₂}
-    → n₁ ≤ 1
-    → n₂ ≤ 1
-    → CapZeroes 2 (n₁ , n₂)
+    : StepsLeft 0 (1 , 1)
+  one01
+    : StepsLeft 1 (0 , 1)
+  one10
+    : StepsLeft 1 (1 , 0)
+  two
+    : StepsLeft 2 (0 , 0)
 
-0≤1 : 0 ≤ 1
-0≤1 = z≤n
+SomeStepsLeft
+  : ℕ × ℕ → Set
+SomeStepsLeft nn
+  = ∃[ n ] StepsLeft n nn
 
-1≤1 : 1 ≤ 1
-1≤1 = s≤s z≤n
+initiallySomeStepsLeft
+  : ∃[ n ] StepsLeft n (0 , 0)
+initiallySomeStepsLeft
+  = (_ , two)
 
----------------------------------------
--- part 1: always at most two zeroes --
----------------------------------------
+stepPreservesSomeStepsLeft
+  : (parent : ℕ × ℕ)
+  → SomeStepsLeft parent
+  → All SomeStepsLeft (natTreeStep parent)
+stepPreservesSomeStepsLeft .(0 , 0) (_ , two)
+  = (_ , one10) ∷ (_ , one01) ∷ []
+stepPreservesSomeStepsLeft .(0 , 1) (_ , one01)
+  = (_ , zero) ∷ []
+stepPreservesSomeStepsLeft .(1 , 0) (_ , one10)
+  = (_ , zero) ∷ []
+stepPreservesSomeStepsLeft .(1 , 1) (_ , zero)
+  = (_ , two) ∷ []
 
-alwaysTwoZeroesFromTwoZeroes
-  : (nn : ℕ × ℕ)
-  → CapZeroes 2 nn
-  → AllSubtrees (CapZeroes 2) nn
-AllSubtrees.trueHere (alwaysTwoZeroesFromTwoZeroes nn cap)
-  = cap
-AllSubtrees.trueThere (alwaysTwoZeroesFromTwoZeroes (.0 , .0) (atMostTwo z≤n z≤n))
-  = alwaysTwoZeroesFromTwoZeroes (1 , 0) (atMostTwo 1≤1 0≤1)
-  ∷ alwaysTwoZeroesFromTwoZeroes (0 , 1) (atMostTwo 0≤1 1≤1)
-  ∷ []
-AllSubtrees.trueThere (alwaysTwoZeroesFromTwoZeroes (.0 , .1) (atMostTwo z≤n (s≤s z≤n)))
-  = alwaysTwoZeroesFromTwoZeroes (1 , 1) (atMostTwo 1≤1 1≤1)
-  ∷ []
-AllSubtrees.trueThere (alwaysTwoZeroesFromTwoZeroes (.1 , .0) (atMostTwo (s≤s z≤n) z≤n))
-  = alwaysTwoZeroesFromTwoZeroes (1 , 1) (atMostTwo 1≤1 1≤1)
-  ∷ []
-AllSubtrees.trueThere (alwaysTwoZeroesFromTwoZeroes (.1 , .1) (atMostTwo (s≤s z≤n) (s≤s z≤n)))
-  = alwaysTwoZeroesFromTwoZeroes (0 , 0) (atMostTwo 0≤1 0≤1)
-  ∷ []
+alwaysSomeStepsLeft
+  : AllSubtrees SomeStepsLeft initialPosition
+alwaysSomeStepsLeft
+  = AllSubtrees-induction
+      stepPreservesSomeStepsLeft
+      initialPosition
+      initiallySomeStepsLeft
 
-------------------------------------
--- part 2: eventually zero zeroes --
-------------------------------------
-
-eventuallyOneZeroFromTwoZeroes
-  : (nn : ℕ × ℕ)
-  → CapZeroes 2 nn
-  → AllPaths (CapZeroes 1) nn
-eventuallyOneZeroFromTwoZeroes (.0 , .0) (atMostTwo z≤n z≤n)
+eventuallyZeroStepsLeft
+  : (n : ℕ)
+  → (nn : ℕ × ℕ)
+  → StepsLeft n nn
+  → AllPaths (StepsLeft 0) nn
+eventuallyZeroStepsLeft .0 .(1 , 1) zero
+  = here zero
+eventuallyZeroStepsLeft .1 .(0 , 1) one01
   = there
-  ( here (atMostOne2 0≤1)
-  ∷ [ here (atMostOne1 0≤1) ]
-  )
-eventuallyOneZeroFromTwoZeroes (.0 , .1) (atMostTwo z≤n (s≤s z≤n))
-  = here (atMostOne1 0≤1)
-eventuallyOneZeroFromTwoZeroes (.1 , .0) (atMostTwo (s≤s z≤n) z≤n)
-  = here (atMostOne2 0≤1)
-eventuallyOneZeroFromTwoZeroes (.1 , .1) (atMostTwo (s≤s z≤n) (s≤s z≤n))
-  = here (atMostOne2 1≤1)
+    [ eventuallyZeroStepsLeft 0 (1 , 1) zero ]
+eventuallyZeroStepsLeft .1 .(1 , 0) one10
+  = there
+    [ eventuallyZeroStepsLeft 0 (1 , 1) zero ]
+eventuallyZeroStepsLeft .2 .(0 , 0) two
+  = there
+    ( eventuallyZeroStepsLeft 1 (1 , 0) one10 ∷
+    [ eventuallyZeroStepsLeft 1 (0 , 1) one01 ]
+    )
 
-eventuallyZeroZeroesFromOneZero
+zeroStepsMeansOneOne
   : (nn : ℕ × ℕ)
-  → CapZeroes 1 nn
-  → AllPaths (CapZeroes 0) nn
-eventuallyZeroZeroesFromOneZero (.0 , .1) (atMostOne1 z≤n)
-  = there [ here zero ]
-eventuallyZeroZeroesFromOneZero (.1 , .1) (atMostOne1 (s≤s z≤n))
-  = here zero
-eventuallyZeroZeroesFromOneZero (.1 , .0) (atMostOne2 z≤n)
-  = there [ here zero ]
-eventuallyZeroZeroesFromOneZero (.1 , .1) (atMostOne2 (s≤s z≤n))
-  = here zero
-
--- (1 , 1) occurs after a finite number of steps
-eventuallyZeroZeroesFromTwoZeroes
-  : (nn : ℕ × ℕ)
-  → CapZeroes 2 nn
-  → AllPaths (CapZeroes 0) nn
-eventuallyZeroZeroesFromTwoZeroes nn cap
-    = eventuallyOneZeroFromTwoZeroes nn cap
-  >>= eventuallyZeroZeroesFromOneZero
-
----------------------------------
--- combining part 1 and part 2 --
----------------------------------
-
-zeroZeroes⇒OneOne
-  : (nn : ℕ × ℕ)
-  → CapZeroes 0 nn
-  → (1 , 1) ≡ nn
-zeroZeroes⇒OneOne (.1 , .1) zero
+  → StepsLeft 0 nn
+  → IsOneOne nn
+zeroStepsMeansOneOne .(1 , 1) zero
   = refl
 
-eventuallyOneOneFromTwoZeroes
+eventuallyOneOne
   : (nn : ℕ × ℕ)
-  → CapZeroes 2 nn
-  → AllPaths (_≡_ (1 , 1)) nn
-eventuallyOneOneFromTwoZeroes nn cap
+  → SomeStepsLeft nn
+  → AllPaths IsOneOne nn
+eventuallyOneOne nn (n , stepsLeft)
   = AllPaths-map
-      zeroZeroes⇒OneOne
+      zeroStepsMeansOneOne
       nn
-      (eventuallyZeroZeroesFromTwoZeroes nn cap)
+      (eventuallyZeroStepsLeft n nn stepsLeft)
 
 -- (1 , 1) occurs infinitely-often
 mainProof : ProblemStatement
 mainProof
   = infinitelyOften
-      eventuallyOneOneFromTwoZeroes
-      (0 , 0)
-      (alwaysTwoZeroesFromTwoZeroes
-        (0 , 0)
-        (atMostTwo 0≤1 0≤1))
+      eventuallyOneOne
+      initialPosition
+      alwaysSomeStepsLeft

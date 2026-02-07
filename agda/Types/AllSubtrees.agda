@@ -23,6 +23,31 @@ record AllSubtrees (P : A → Set) (a : A) : Set where
       : All (AllSubtrees P) (f a)
 
 mutual
+  AllSubtrees-induction
+    : {P : A → Set}
+    → ((parent : A) → P parent → All P (f parent))
+    → (x : A) → P x → AllSubtrees P x
+  AllSubtrees.trueHere (AllSubtrees-induction trueForAllChildren x px)
+    = px
+  AllSubtrees.trueThere (AllSubtrees-induction trueForAllChildren x px)
+    = All-AllSubtrees-induction
+        trueForAllChildren
+        (f x)
+        (trueForAllChildren x px)
+  
+  All-AllSubtrees-induction
+    : {P : A → Set}
+    → ((parent : A) → P parent → All P (f parent))
+    → (xs : List A)
+    → All P xs
+    → All (AllSubtrees P) xs
+  All-AllSubtrees-induction trueForAllChildren _ []
+    = []
+  All-AllSubtrees-induction trueForAllChildren _ (px ∷ pxs)
+    = AllSubtrees-induction trueForAllChildren _ px
+    ∷ All-AllSubtrees-induction trueForAllChildren _ pxs
+
+mutual
   AllSubtrees-map
     : {P Q : A → Set}
     → ((x : A) → P x → Q x)
