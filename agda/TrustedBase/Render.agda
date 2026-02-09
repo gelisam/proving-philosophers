@@ -3,7 +3,7 @@ module TrustedBase.Render where
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
 open import Data.List.Base using (List; []; _∷_; reverse; map)
-open import Data.String.Base as Str using (String) renaming (_++_ to _+++_)
+open import Data.String.Base as Str using (String; _++_)
 
 open import Types.Syntax using (Syntax; Line; Block; Indent)
 open import Types.Fork using (Fork; MkFork; show-fork)
@@ -15,7 +15,7 @@ open import Types.Program using (Program; MkProgram)
 -- static FORK_1_2: Mutex<()> = Mutex::new(());
 render-fork-declaration : Fork → Syntax
 render-fork-declaration fork
-    = Line ("static " +++ show-fork fork +++ ": Mutex<()> = Mutex::new(());")
+    = Line ("static " ++ show-fork fork ++ ": Mutex<()> = Mutex::new(());")
 
 -- We have to trust that
 --
@@ -25,13 +25,13 @@ render-fork-declaration fork
 -- be proving facts about the wrong program.
 render-stmt : Stmt → Syntax
 render-stmt (ThinkRandomly n)
-  = Line ("think_randomly(" +++ show n +++ ");")
+  = Line ("think_randomly(" ++ show n ++ ");")
 render-stmt (EatRandomly n)
-  = Line ("eat_randomly(" +++ show n +++ ");")
+  = Line ("eat_randomly(" ++ show n ++ ");")
 render-stmt (LockFork g fork)
-  = Line ( "let _guard" +++ show g
-       +++ " = " +++ show-fork fork
-       +++ ".lock().unwrap();"
+  = Line ( "let _guard" ++ show g
+        ++ " = " ++ show-fork fork
+        ++ ".lock().unwrap();"
          )
 
 -- We have to trust that
@@ -46,11 +46,11 @@ render-spawn-thread (MkThread pid stmts)
   where
     handleName : String
     handleName
-      = "handle" +++ show pid
+      = "handle" ++ show pid
 
     spawnStart : Syntax
     spawnStart
-      = Line ("let " +++ handleName +++ " = thread::spawn(|| {")
+      = Line ("let " ++ handleName ++ " = thread::spawn(|| {")
 
     loopBody : Syntax
     loopBody
@@ -66,7 +66,7 @@ render-spawn-thread (MkThread pid stmts)
 
 render-join-thread : Thread → Syntax
 render-join-thread (MkThread pid _)
-  = Line ("handle" +++ show pid +++ ".join().unwrap();")
+  = Line ("handle" ++ show pid ++ ".join().unwrap();")
 
 -- We are not going to prove anything about the implementation of think_randomly
 -- and eat_randomly, only about how often they are called, so we don't need a

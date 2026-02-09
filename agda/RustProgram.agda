@@ -2,9 +2,7 @@ module RustProgram where
 
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
-open import Data.List.Base using (List; []; _∷_; reverse; map; concat; _++_)
-open import Data.String.Base using (String)
-open import Data.String.Base as Str using () renaming (_++_ to _+++_)
+open import Data.List.Base using (List; []; _∷_)
 
 import Types.Syntax
 open import Types.Fork using (Fork; MkFork)
