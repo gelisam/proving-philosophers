@@ -69,10 +69,10 @@ ProblemStatement
   = InfinitelyOften IsOneOne initialPosition
 
 
--- We want to prove that from any position, we will reach (0 , 0) after a finite
+-- We want to prove that from any position, we will reach (1 , 1) after a finite
 -- number of steps. We will first calculate a finite StepsLeft value for every
 -- position, and then show that for a position with @StepsLeft n@, we will reach
--- (0 , 0) after a finite number of steps, namely @n@.
+-- (1 , 1) after a finite number of steps, namely @n@.
 
 data StepsLeft : ℕ → ℕ × ℕ → Set where
   zero
