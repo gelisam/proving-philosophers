@@ -1,7 +1,8 @@
 {-# OPTIONS --guardedness #-}
 module Practice where
 
-open import Data.List.Base using (List; []; _∷_)
+open import Data.Bool using (Bool; true; false)
+open import Data.List.Base using (List; []; _∷_; _++_; map)
 open import Data.List.Relation.Unary.All using (All; []; _∷_)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; ∃-syntax)
@@ -33,41 +34,24 @@ import Types.InfinitelyOften using (InfinitelyOften; infinitelyOften)
 -- As a practice for proving that no philosopher starves, we want to prove that
 -- the (2 , 2) state occurs infinitely often.
 
-natTreeStep : ℕ × ℕ → List (ℕ × ℕ)
-natTreeStep (0 , 0)
-  = (1 , 0)
-  ∷ (0 , 1)
-  ∷ []
-natTreeStep (0 , 1)
-  = (1 , 1)
-  ∷ (0 , 2)
-  ∷ []
-natTreeStep (0 , 2)
-  = (1 , 2)
-  ∷ []
-natTreeStep (1 , 0)
-  = (2 , 0)
-  ∷ (1 , 1)
-  ∷ []
-natTreeStep (1 , 1)
-  = (2 , 1)
-  ∷ (1 , 2)
-  ∷ []
-natTreeStep (1 , 2)
-  = (2 , 2)
-  ∷ []
-natTreeStep (2 , 0)
-  = (2 , 1)
-  ∷ []
-natTreeStep (2 , 1)
-  = (2 , 2)
-  ∷ []
+incrementIfPossible
+  : ℕ
+  → List ℕ
+incrementIfPossible 0
+  = 1 ∷ []
+incrementIfPossible 1
+  = 2 ∷ []
+incrementIfPossible _
+  = []
+
+natTreeStep
+  : ℕ × ℕ → List (ℕ × ℕ)
 natTreeStep (2 , 2)
   = (0 , 0)
   ∷ []
-natTreeStep _
-  = (3 , 3)
-  ∷ []
+natTreeStep (x , y)
+  = map (λ x' → (x' , y)) (incrementIfPossible x)
+ ++ map (λ y' → (x , y')) (incrementIfPossible y)
 
 natTree : ℕ × ℕ → Tree (ℕ × ℕ)
 natTree nn = MkTree natTreeStep nn
