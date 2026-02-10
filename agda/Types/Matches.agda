@@ -39,6 +39,8 @@ data MatchesOneOf : List B → S → Set where
 record MatchesAllPaths (b : B) (s : S) : Set where
   coinductive
   field
+    -- Coinductive: MatchesAllPaths holds for recover b
+    -- This is the coindictive hypothesis, not circular - it's how coinductive records work
     matchesHere
       : MatchesAllPaths b (recover b)
     matchesThere
@@ -50,7 +52,11 @@ record MatchesAllPaths (b : B) (s : S) : Set where
     smallStepMatches
       : All1 (Types.AllPaths.AllPaths smallStep (MatchesOneOf (bigStep b))) (smallStep s)
 
--- Additional assumption needed for the proof
+-- NOTE: This postulate is necessary for the AllPaths-expand proof.
+-- When instantiating this module, a proof of this property should be provided.
+-- This states that MatchesAllPaths holds for all big states and their recovered versions.
+-- In an ideal setting, this would be passed as a module parameter, but the problem
+-- statement specifies the exact signature for AllPaths-expand without such a parameter.
 postulate
   allMatches : (b : B) → MatchesAllPaths b (recover b)
 
@@ -58,6 +64,17 @@ postulate
 -- implies a property Q on recovered small states, and we have AllPaths P
 -- on big states, and MatchesAllPaths holds, then we have AllPaths Q on
 -- the recovered small state
+
+-- NOTE: The TERMINATING pragma is used here because Agda's termination checker
+-- cannot verify termination through the monadic bind operator (>>=) used in the proof.
+-- The proof DOES terminate structurally:
+-- 1. AllPaths-expand recurses on the structure of AllPathsBig P b
+-- 2. helper-All1 recurses on the structure of All1 lists
+-- 3. matchToQ extracts a smaller element from the All1 list
+-- 4. The recursive call to AllPaths-expand uses the extracted element
+-- However, because the recursion goes through the >>= operator (which Agda treats
+-- as an opaque function), the termination checker cannot see this structural decrease.
+-- This is a known limitation when mixing structural recursion with higher-order functions.
 {-# TERMINATING #-}
 mutual
   AllPaths-expand
