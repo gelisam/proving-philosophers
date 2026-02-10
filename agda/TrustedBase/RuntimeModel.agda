@@ -18,7 +18,7 @@ open import Types.Tree using (Tree; MkTree)
 -- Represents what condition a thread is waiting for
 data WaitingCondition : Set where
   ForkAvailable : Fork → WaitingCondition
-  SleepElapsed : WaitingCondition
+  SleepTimer : ℕ → WaitingCondition  -- Tracks remaining sleep time
 
 -- Represents the state of a single thread
 record ThreadState : Set where
@@ -72,28 +72,67 @@ wait-for condition ts
       (restOfLoop ts)
       (fullLoop ts)
 
--- Process a single statement for a thread, returning new thread state
-process-stmt : Stmt → ThreadState → ThreadState
-process-stmt (ThinkRandomly _)
-  = wait-for SleepElapsed
-process-stmt (EatRandomly _)
-  = wait-for SleepElapsed
-process-stmt (LockFork _ fork)
-  = wait-for (ForkAvailable fork)
+-- Helper to generate all sleep timer states (1 to n seconds)
+generate-timer-states : ℕ → ThreadState → List ThreadState
+generate-timer-states zero ts = []
+generate-timer-states (suc n) ts
+  = wait-for (SleepTimer (suc n)) ts ∷ generate-timer-states n ts
+
+-- Process a single statement for a thread, returning list of possible new thread states
+process-stmt : Stmt → ThreadState → List ThreadState
+process-stmt (ThinkRandomly _) ts
+  = generate-timer-states 10 ts
+process-stmt (EatRandomly _) ts
+  = generate-timer-states 10 ts
+process-stmt (LockFork _ fork) ts
+  = wait-for (ForkAvailable fork) ts ∷ []
+
+-- Helper: Decrement sleep timer by 1
+decrement-timer : WaitingCondition → Maybe WaitingCondition
+decrement-timer (ForkAvailable fork) = just (ForkAvailable fork)
+decrement-timer (SleepTimer zero) = nothing  -- Timer expired
+decrement-timer (SleepTimer (suc n)) = just (SleepTimer n)
+
+-- Decrement timer for a thread state if all threads are waiting
+decrement-thread-timer : ThreadState → ThreadState
+decrement-thread-timer ts with waiting ts
+... | nothing = ts
+... | just condition =
+  let new-waiting = decrement-timer condition
+  in MkThreadState
+       (acquiredForks ts)
+       new-waiting
+       (restOfLoop ts)
+       (fullLoop ts)
 
 -- Step a single thread forward if possible
 step-thread : {n : ℕ} → ThreadState → ProgramState n → List ThreadState
 step-thread ts state with waiting ts | restOfLoop ts
 -- Thread is not waiting and has statements to execute
-... | nothing | (stmt ∷ rest) = 
-  let new-ts = process-stmt stmt ts
-  in (MkThreadState
-       (acquiredForks new-ts)
-       (waiting new-ts)
-       rest
-       (fullLoop ts)) ∷ []
+... | nothing | (stmt ∷ rest) with stmt
+-- LockFork: Grab immediately if available, otherwise wait
+... | LockFork _ fork =
+  if fork-is-available fork state
+  then (MkThreadState
+         (fork ∷ acquiredForks ts)
+         nothing
+         rest
+         (fullLoop ts)) ∷ []
+  else (MkThreadState
+         (acquiredForks ts)
+         (just (ForkAvailable fork))
+         rest
+         (fullLoop ts)) ∷ []
+-- ThinkRandomly/EatRandomly: Generate all possible timer states
+... | _ =
+  let new-ts-list = process-stmt stmt ts
+  in map (λ new-ts → MkThreadState
+                       (acquiredForks new-ts)
+                       (waiting new-ts)
+                       rest
+                       (fullLoop ts)) new-ts-list
 -- Thread is waiting for a fork
-... | just (ForkAvailable fork) | _ =
+step-thread ts state | just (ForkAvailable fork) | _ =
   if fork-is-available fork state
   then (MkThreadState
          (fork ∷ acquiredForks ts)
@@ -101,17 +140,10 @@ step-thread ts state with waiting ts | restOfLoop ts
          (restOfLoop ts)
          (fullLoop ts)) ∷ []
   else []
--- Thread is waiting for sleep to elapse
-... | just SleepElapsed | _ =
-  if all-threads-waiting state
-  then (MkThreadState
-         (acquiredForks ts)
-         nothing
-         (restOfLoop ts)
-         (fullLoop ts)) ∷ []
-  else []
+-- Thread is waiting for sleep timer
+step-thread ts state | just (SleepTimer n) | _ = []
 -- Thread finished its loop, release forks and restart
-... | nothing | [] =
+step-thread ts state | nothing | [] =
   (MkThreadState
     []
     nothing
@@ -128,7 +160,12 @@ generate-next-states {suc n} (ts ∷ rest) =
       states-from-first = map (λ new-ts → new-ts ∷ rest) next-ts-list
       -- Other threads step
       states-from-rest = map (_∷_ ts) rest-nexts
-  in states-from-first ++ states-from-rest
+      -- If all threads are waiting, also add state where all timers decrement
+      timer-decrement-state =
+        if all-threads-waiting (ts ∷ rest)
+        then mapVec decrement-thread-timer (ts ∷ rest) ∷ []
+        else []
+  in states-from-first ++ states-from-rest ++ timer-decrement-state
 
 -- Helper to extract threads from a Program
 get-threads : Program → List Thread
