@@ -140,8 +140,15 @@ step-thread ts state | just (ForkAvailable fork) | _ =
          (restOfLoop ts)
          (fullLoop ts)) ∷ []
   else []
--- Thread is waiting for sleep timer
-step-thread ts state | just (SleepTimer n) | _ = []
+-- Thread is waiting for sleep timer that has expired
+step-thread ts state | just (SleepTimer zero) | _ =
+  (MkThreadState
+     (acquiredForks ts)
+     nothing
+     (restOfLoop ts)
+     (fullLoop ts)) ∷ []
+-- Thread is waiting for sleep timer (not yet expired)
+step-thread ts state | just (SleepTimer (suc n)) | _ = []
 -- Thread finished its loop, release forks and restart
 step-thread ts state | nothing | [] =
   (MkThreadState
