@@ -73,6 +73,8 @@ wait-for condition ts
       (fullLoop ts)
 
 -- Helper to generate all sleep timer states (1 to n seconds)
+-- Generates in descending order [n, n-1, ..., 1] for efficiency
+-- Order doesn't affect correctness as all states are explored
 generate-timer-states : ℕ → ThreadState → List ThreadState
 generate-timer-states zero ts = []
 generate-timer-states (suc n) ts
@@ -88,6 +90,8 @@ process-stmt (LockFork _ fork) ts
   = wait-for (ForkAvailable fork) ts ∷ []
 
 -- Helper: Decrement sleep timer by 1
+-- Returns nothing for expired timers so thread can proceed
+-- Preserves ForkAvailable conditions as they don't expire
 decrement-timer : WaitingCondition → Maybe WaitingCondition
 decrement-timer (ForkAvailable fork) = just (ForkAvailable fork)
 decrement-timer (SleepTimer zero) = nothing  -- Timer expired
@@ -168,6 +172,7 @@ generate-next-states {suc n} (ts ∷ rest) =
       -- Other threads step
       states-from-rest = map (_∷_ ts) rest-nexts
       -- If all threads are waiting, also add state where all timers decrement
+      -- Timer decrement is added last to prioritize individual thread progress
       timer-decrement-state =
         if all-threads-waiting (ts ∷ rest)
         then mapVec decrement-thread-timer (ts ∷ rest) ∷ []
