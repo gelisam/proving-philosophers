@@ -1,4 +1,4 @@
-module Types.Syntax where
+module Types.RustProgram.Syntax where
 
 open import Data.List.Base using (List; []; _∷_; concat; map)
 open import Data.Nat using (ℕ; zero; suc)

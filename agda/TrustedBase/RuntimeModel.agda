@@ -9,10 +9,10 @@ open import Data.Vec as Vec using (Vec; []; _∷_; toList; fromList)
 open import Data.Vec using () renaming (map to mapVec)
 open import Function.Base using (id)
 
-open import Types.Fork using (Fork; MkFork)
-open import Types.Program using (Program; MkProgram)
-open import Types.Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
-open import Types.Thread using (Thread; MkThread)
+open import Types.RustProgram.Fork using (Fork; MkFork)
+open import Types.RustProgram.Program using (Program; MkProgram)
+open import Types.RustProgram.Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
+open import Types.RustProgram.Thread using (Thread; MkThread)
 open import Types.Tree using (Tree; MkTree)
 
 -- Represents what condition a thread is waiting for

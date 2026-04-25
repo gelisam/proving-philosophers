@@ -4,11 +4,11 @@ open import Data.Nat using (ℕ; zero; suc)
 open import Data.Nat.Show using (show)
 open import Data.List.Base using (List; []; _∷_)
 
-import Types.Syntax
-open import Types.Fork using (Fork; MkFork)
-open import Types.Stmt using (ThinkRandomly; LockFork; EatRandomly)
-open import Types.Thread using (Thread; MkThread)
-open import Types.Program using (Program; MkProgram)
+import Types.RustProgram.Syntax
+open import Types.RustProgram.Fork using (Fork; MkFork)
+open import Types.RustProgram.Stmt using (ThinkRandomly; LockFork; EatRandomly)
+open import Types.RustProgram.Thread using (Thread; MkThread)
+open import Types.RustProgram.Program using (Program; MkProgram)
 
 -- an Agda representation of rust/main.rs, so we can prove things about it.
 

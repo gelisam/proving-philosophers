@@ -1,9 +1,9 @@
 open import Data.List.Base using (List; []; _∷_)
 
-open import Types.All1 using (All1; [_]; _∷_)
+open import Types.Proof.All1 using (All1; [_]; _∷_)
 open import Types.Tree using (Tree; StepFun; value; childValues)
 
-module Types.AllPaths {A : Set} (f : StepFun A) where
+module Types.Proof.AllPaths {A : Set} (f : StepFun A) where
 
 -- We want to express the property that no philosopher will starve. That is, at
 -- any point in any of the branching paths of the execution tree, that point is

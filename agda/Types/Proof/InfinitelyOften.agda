@@ -1,13 +1,13 @@
 {-# OPTIONS --guardedness #-}
 
 open import Types.Tree using (StepFun)
-import Types.AllPaths using (AllPaths)
-import Types.AllSubtrees using (AllSubtrees; AllSubtrees-map)
+import Types.Proof.AllPaths using (AllPaths)
+import Types.Proof.AllSubtrees using (AllSubtrees; AllSubtrees-map)
 
-module Types.InfinitelyOften {A : Set} (f : StepFun A) where
+module Types.Proof.InfinitelyOften {A : Set} (f : StepFun A) where
 
-open Types.AllPaths f
-open Types.AllSubtrees f
+open Types.Proof.AllPaths f
+open Types.Proof.AllSubtrees f
 
 -- P is true infinitely often: that is, starting from any node (AllSubtrees),
 -- all paths reach a node satisfying P after a finite number of steps

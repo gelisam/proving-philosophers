@@ -5,7 +5,7 @@ open import Data.List.Relation.Unary.All using (All; []; _∷_)
 
 open import Types.Tree using (StepFun)
 
-module Types.AllSubtrees {A : Set} (f : StepFun A) where
+module Types.Proof.AllSubtrees {A : Set} (f : StepFun A) where
 
 -- We want to express the property that no philosopher will starve. That is, at
 -- any point in any of the branching paths of the execution tree, that point is
