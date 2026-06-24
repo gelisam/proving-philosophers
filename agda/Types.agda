@@ -115,11 +115,12 @@ PossibleAtomicStepsAreNotDeadlockable {S} {A} possibleAtomicSteps
 data AllTree
        {S : Set}
        {FS : Set}
-       (P : FS → Set)
+       (PredS : S → Set)
+       (PredFS : FS → Set)
        : Tree S FS
        → Set where
   mkAllTree
-    : ∀ {stepFun s0}
-    → ((s : S) → AllMagma P (stepFun s))
-    → P s0
-    → AllTree P (mkTree stepFun s0)
+    : ∀ {stepFun fs0}
+    → ((s : S) → PredS s → AllMagma PredFS (stepFun s))
+    → PredFS fs0
+    → AllTree PredS PredFS (mkTree stepFun fs0)
