@@ -64,7 +64,23 @@ timeStep
   → PossibleAtomicSteps S A
   → S
   → FiniteDeadlockablePossibilityTree S A
-timeStep = _
+timeStep {S} {A} possibleSteps s0 = mkTree stepFun (next s0)
+  where
+    mutual
+      stepFuns : Magma S → Magma (FiniteDeadlockable S A)
+      stepFuns (atom s)
+        = atom (next s)
+      stepFuns (concat ss1 ss2)
+        = concat (stepFuns ss1) (stepFuns ss2)
+
+      stepFun : S → Magma (FiniteDeadlockable S A)
+      stepFun s with possibleSteps s
+      ... | deadlocked
+          = atom deadlocked
+      ... | done a
+          = atom (done a)
+      ... | next ss
+          = stepFuns ss
 
 lifecycle
   : ∀ {S A}
