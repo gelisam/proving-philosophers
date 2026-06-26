@@ -59,35 +59,72 @@ FiniteDeadlockablePossibilityTree S A
 PossibleAtomicSteps : Set → Set → Set
 PossibleAtomicSteps S A = S → FiniteDeadlockable (Magma S) A
 
+module timeStepImpl
+         {S A}
+         (possibleSteps : PossibleAtomicSteps S A)
+         where
+  mutual
+    stepFuns
+      : Magma S
+      → Magma (FiniteDeadlockable S A)
+    stepFuns (atom s)
+      = atom (next s)
+    stepFuns (concat m1 m2)
+      = concat (stepFuns m1) (stepFuns m2)
+
+    stepFun
+      : S
+      → Magma (FiniteDeadlockable S A)
+    stepFun s with possibleSteps s
+    ... | deadlocked
+        = atom deadlocked
+    ... | done a
+        = atom (done a)
+    ... | next ss
+        = stepFuns ss
+
 timeStep
   : ∀ {S A}
   → PossibleAtomicSteps S A
   → S
   → FiniteDeadlockablePossibilityTree S A
-timeStep {S} {A} possibleSteps s0 = mkTree stepFun (next s0)
-  where
-    mutual
-      stepFuns : Magma S → Magma (FiniteDeadlockable S A)
-      stepFuns (atom s)
-        = atom (next s)
-      stepFuns (concat ss1 ss2)
-        = concat (stepFuns ss1) (stepFuns ss2)
+timeStep {S} {A} possibleSteps s0
+  = mkTree
+      (timeStepImpl.stepFun possibleSteps)
+      (next s0)
 
-      stepFun : S → Magma (FiniteDeadlockable S A)
-      stepFun s with possibleSteps s
-      ... | deadlocked
-          = atom deadlocked
-      ... | done a
-          = atom (done a)
-      ... | next ss
-          = stepFuns ss
+module lifecycleImpl
+         {S A}
+         (possibleSteps : PossibleAtomicSteps S A)
+         (advanceTime : A → S)
+         where
+  advanceTimes
+    : Magma (FiniteDeadlockable S A)
+    → Magma (Deadlockable S)
+  advanceTimes (atom deadlocked)
+    = atom deadlocked
+  advanceTimes (atom (done a))
+    = atom (next (advanceTime a))
+  advanceTimes (atom (next s))
+    = atom (next s)
+  advanceTimes (concat m1 m2)
+    = concat (advanceTimes m1) (advanceTimes m2)
+
+  stepFun
+    : S → Magma (Deadlockable S)
+  stepFun s
+    = advanceTimes (timeStepImpl.stepFun possibleSteps s)
 
 lifecycle
   : ∀ {S A}
   → PossibleAtomicSteps S A
   → (advanceTime : A → S)
+  → S
   → InfiniteDeadlockablePossibilityTree S
-lifecycle = _
+lifecycle {S} {A} possibleSteps advanceTime s0
+  = mkTree
+      (lifecycleImpl.stepFun possibleSteps advanceTime)
+      (next s0)
 
 -------------------
 -- proof objects --
