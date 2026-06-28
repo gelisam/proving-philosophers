@@ -12,15 +12,15 @@ open import Data.Vec using (Vec; lookup; _[_]≔_)
 -- of non-deterministic systems             --
 ----------------------------------------------
 
-data FiniteDeadlockable (S : Set) (A : Set) : Set where
-  deadlocked
-    : FiniteDeadlockable S A
+data FinitePausable (S : Set) (A : Set) : Set where
+  paused
+    : FinitePausable S A
   done
     : A
-    → FiniteDeadlockable S A
+    → FinitePausable S A
   next
     : S
-    → FiniteDeadlockable S A
+    → FinitePausable S A
 
 data Finite (S : Set) (A : Set) : Set where
   done
@@ -30,21 +30,14 @@ data Finite (S : Set) (A : Set) : Set where
     : S
     → Finite S A
 
--- deadlocked is permanent
-data Deadlockable (S : Set) : Set where
-  deadlocked
-    : Deadlockable S
+data Pausable (S : Set) : Set where
+  -- Could represent that a single philosopher is waiting for a fork,
+  -- or that the entire system is deadlocked.
+  paused
+    : Pausable S
   next
     : S
-    → Deadlockable S
-
--- blocked could be temporary or permanent
-data Blockable (S : Set) : Set where
-  blocked
-    : Blockable S
-  next
-    : S
-    → Blockable S
+    → Pausable S
 
 data Magma (A : Set) : Set where
   atom
@@ -65,20 +58,20 @@ InfinitePossibilityTree : Set → Set
 InfinitePossibilityTree S
   = Tree S S
 
-InfiniteDeadlockablePossibilityTree : Set → Set
-InfiniteDeadlockablePossibilityTree S
-  = Tree S (Deadlockable S)
+InfinitePausablePossibilityTree : Set → Set
+InfinitePausablePossibilityTree S
+  = Tree S (Pausable S)
 
 FinitePossibilityTree : Set → Set → Set
 FinitePossibilityTree S A
   = Tree S (Finite S A)
 
-FiniteDeadlockablePossibilityTree : Set → Set → Set
-FiniteDeadlockablePossibilityTree S A
-  = Tree S (FiniteDeadlockable S A)
+FinitePausablePossibilityTree : Set → Set → Set
+FinitePausablePossibilityTree S A
+  = Tree S (FinitePausable S A)
 
 PossibleAtomicSteps : Set → Set → Set
-PossibleAtomicSteps S A = S → FiniteDeadlockable (Magma S) A
+PossibleAtomicSteps S A = S → FinitePausable (Magma S) A
 
 module timeStepImpl
          {S A}
@@ -87,7 +80,7 @@ module timeStepImpl
   mutual
     stepFuns
       : Magma S
-      → Magma (FiniteDeadlockable S A)
+      → Magma (FinitePausable S A)
     stepFuns (atom s)
       = atom (next s)
     stepFuns (concat m1 m2)
@@ -95,10 +88,10 @@ module timeStepImpl
 
     stepFun
       : S
-      → Magma (FiniteDeadlockable S A)
+      → Magma (FinitePausable S A)
     stepFun s with possibleSteps s
-    ... | deadlocked
-        = atom deadlocked
+    ... | paused
+        = atom paused
     ... | done a
         = atom (done a)
     ... | next ss
@@ -108,7 +101,7 @@ timeStep
   : ∀ {S A}
   → PossibleAtomicSteps S A
   → S
-  → FiniteDeadlockablePossibilityTree S A
+  → FinitePausablePossibilityTree S A
 timeStep {S} {A} possibleSteps s0
   = mkTree
       (timeStepImpl.stepFun possibleSteps)
@@ -120,10 +113,10 @@ module lifecycleImpl
          (advanceTime : A → S)
          where
   advanceTimes
-    : Magma (FiniteDeadlockable S A)
-    → Magma (Deadlockable S)
-  advanceTimes (atom deadlocked)
-    = atom deadlocked
+    : Magma (FinitePausable S A)
+    → Magma (Pausable S)
+  advanceTimes (atom paused)
+    = atom paused
   advanceTimes (atom (done a))
     = atom (next (advanceTime a))
   advanceTimes (atom (next s))
@@ -132,7 +125,7 @@ module lifecycleImpl
     = concat (advanceTimes m1) (advanceTimes m2)
 
   stepFun
-    : S → Magma (Deadlockable S)
+    : S → Magma (Pausable S)
   stepFun s
     = advanceTimes (timeStepImpl.stepFun possibleSteps s)
 
@@ -141,7 +134,7 @@ lifecycle
   → PossibleAtomicSteps S A
   → (advanceTime : A → S)
   → S
-  → InfiniteDeadlockablePossibilityTree S
+  → InfinitePausablePossibilityTree S
 lifecycle {S} {A} possibleSteps advanceTime s0
   = mkTree
       (lifecycleImpl.stepFun possibleSteps advanceTime)
@@ -152,22 +145,22 @@ lifecycle {S} {A} possibleSteps advanceTime s0
 -- proof objects --
 -------------------
 
-data FiniteButNotDeadlockable
+data FiniteButNotPaused
        {S : Set}
        {A : Set}
-       : FiniteDeadlockable S A
+       : FinitePausable S A
        → Set where
   done
     : (a : A)
-    → FiniteButNotDeadlockable (done a)
+    → FiniteButNotPaused (done a)
   next
     : (s : S)
-    → FiniteButNotDeadlockable (next s)
+    → FiniteButNotPaused (next s)
 
-data NotDeadlockable {S : Set} : Deadlockable S → Set where
+data NotPaused {S : Set} : Pausable S → Set where
   next
     : (s : S)
-    → NotDeadlockable (next s)
+    → NotPaused (next s)
 
 data AllMagma {A : Set} (F : A → Set) : Magma A → Set where
   atom
@@ -180,12 +173,12 @@ data AllMagma {A : Set} (F : A → Set) : Magma A → Set where
     → AllMagma F m2
     → AllMagma F (concat m1 m2)
 
-PossibleAtomicStepsAreNotDeadlockable
+PossibleAtomicStepsAreNotPaused
   : ∀ {S A}
   → PossibleAtomicSteps S A
   → Set
-PossibleAtomicStepsAreNotDeadlockable {S} {A} possibleAtomicSteps
-  = ∀ s → FiniteButNotDeadlockable (possibleAtomicSteps s)
+PossibleAtomicStepsAreNotPaused {S} {A} possibleAtomicSteps
+  = ∀ s → FiniteButNotPaused (possibleAtomicSteps s)
 
 data AllTree
        {S : Set}
@@ -347,10 +340,10 @@ canGrabSecondFork p s
 tryGrabFirstFork
   : Philosopher
   → OverallState
-  → Blockable OverallState
+  → Pausable OverallState
 tryGrabFirstFork p s with (canGrabFirstFork p s)
 ... | false
-  = blocked
+  = paused
 ... | true
   = let s' = setPhilosopher p grabbed-one-fork s
  in let s'' = setFork (firstFork p) locked s'
@@ -359,10 +352,10 @@ tryGrabFirstFork p s with (canGrabFirstFork p s)
 tryGrabSecondFork
   : Philosopher
   → OverallState
-  → Blockable OverallState
+  → Pausable OverallState
 tryGrabSecondFork p s with (canGrabSecondFork p s)
 ... | false
-  = blocked
+  = paused
 ... | true
   = let n = -- TODO: sleep for a RANDOM number of time steps
             suc (suc (suc (suc (suc zero))))
@@ -385,7 +378,7 @@ releaseForks p s
 philosopherNextAtomicStep
   : Philosopher
   → OverallState
-  → Blockable OverallState
+  → Pausable OverallState
 philosopherNextAtomicStep p s with (getPhilosopher p s)
 ... | thinking (suc n)
   = next (setPhilosopher p (thinking n) s)
