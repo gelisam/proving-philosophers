@@ -4,7 +4,7 @@ open import Data.Bool using (Bool; true; false)
 open import Data.Fin using (Fin; zero; suc)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
-open import Data.Vec using (Vec; lookup)
+open import Data.Vec using (Vec; lookup; _[_]≔_)
 
 
 ----------------------------------------------
@@ -201,9 +201,10 @@ data AllTree
     → AllTree PredS PredFS (mkTree stepFun fs0)
 
 
----------------------------------------
--- Modelling the Dining Philosophers --
----------------------------------------
+-------------------------
+-- Data model for the  --
+-- Dining Philosophers --
+-------------------------
 
 data PhilosopherState : Set where
   thinking
@@ -221,14 +222,13 @@ data ForkState : Set where
   unlocked
     : ForkState
 
-PhilosopherStates : Set
-PhilosopherStates = Vec PhilosopherState 5
-
-ForkStates : Set
-ForkStates = Vec ForkState 5
-
-OverallState : Set
-OverallState = PhilosopherStates × ForkStates
+record OverallState : Set where
+  constructor mkOverallState
+  field
+    philosophers
+      : Vec PhilosopherState 5
+    forks
+      : Vec ForkState 5
 
 record Philosopher : Set where
   constructor mkPhilosopher
@@ -241,6 +241,40 @@ record Fork : Set where
   field
     index
       : Fin 5
+
+getPhilosopher
+  : Philosopher
+  → OverallState
+  → PhilosopherState
+getPhilosopher (mkPhilosopher i) s
+  = lookup (OverallState.philosophers s) i
+
+getFork
+  : Fork
+  → OverallState
+  → ForkState
+getFork (mkFork i) s
+  = lookup (OverallState.forks s) i
+
+setPhilosopher
+  : Philosopher
+  → PhilosopherState
+  → OverallState
+  → OverallState
+setPhilosopher (mkPhilosopher i) ps' s
+  = let pss = OverallState.philosophers s
+ in let pss' = pss [ i ]≔ ps'
+ in record s { philosophers = pss' }
+
+setFork
+  : Fork
+  → ForkState
+  → OverallState
+  → OverallState
+setFork (mkFork i) fs' s
+  = let fss = OverallState.forks s
+ in let fss' = fss [ i ]≔ fs'
+ in record s { forks = fss' }
 
 -- 5 philosophers and 5 forks, arranged in a circle.
 --
@@ -283,49 +317,87 @@ secondFork p
   = proj₂ (philosopherForks p)
 
 canGrabFirstFork
-  : ForkStates
-  → Philosopher
+  : Philosopher
+  → OverallState
   → Bool
-canGrabFirstFork forks p
-  with (lookup forks (Fork.index (firstFork p)))
+canGrabFirstFork p s
+  with (getFork (firstFork p) s)
 ... | locked
   = false
 ... | unlocked
   = true
 
 canGrabSecondFork
-  : ForkStates
-  → Philosopher
+  : Philosopher
+  → OverallState
   → Bool
-canGrabSecondFork forks p
-  with (lookup forks (Fork.index (secondFork p)))
+canGrabSecondFork p s
+  with (getFork (secondFork p) s)
 ... | locked
   = false
 ... | unlocked
   = true
 
+
+---------------------------------
+-- Possible execution tree for --
+-- the Dining Philosophers     --
+---------------------------------
+
+tryGrabFirstFork
+  : Philosopher
+  → OverallState
+  → Blockable OverallState
+tryGrabFirstFork p s with (canGrabFirstFork p s)
+... | false
+  = blocked
+... | true
+  = let s' = setPhilosopher p grabbed-one-fork s
+ in let s'' = setFork (firstFork p) locked s'
+ in next s''
+
+tryGrabSecondFork
+  : Philosopher
+  → OverallState
+  → Blockable OverallState
+tryGrabSecondFork p s with (canGrabSecondFork p s)
+... | false
+  = blocked
+... | true
+  = let n = -- TODO: sleep for a RANDOM number of time steps
+            suc (suc (suc (suc (suc zero))))
+ in let s' = setPhilosopher p (thinking n) s
+ in let s'' = setFork (secondFork p) locked s'
+ in next s''
+
+releaseForks
+  : Philosopher
+  → OverallState
+  → OverallState
+releaseForks p s
+  = let n = -- TODO: think for a RANDOM number of time steps
+            suc (suc (suc (suc (suc zero))))
+ in let s' = setPhilosopher p (thinking n) s
+ in let s'' = setFork (firstFork p) unlocked s'
+ in let s''' = setFork (secondFork p) unlocked s''
+ in s'''
+
 philosopherNextAtomicStep
-  : ForkStates
-  → Philosopher
-  → PhilosopherState
-  → Blockable PhilosopherState
-philosopherNextAtomicStep forks p (thinking (suc n))
-  = next (thinking n)
-philosopherNextAtomicStep forks p (thinking zero)
-  with canGrabFirstFork forks p
-... | false
-  = blocked
-... | true
-  = next grabbed-one-fork
-philosopherNextAtomicStep forks p grabbed-one-fork
-  with canGrabSecondFork forks p
-... | false
-  = blocked
-... | true
-  = -- TODO: sleep for a RANDOM number of time steps
-    next (eating (suc (suc (suc (suc (suc zero))))))
-philosopherNextAtomicStep forks p (eating (suc n))
-  = next (eating n)
-philosopherNextAtomicStep forks p (eating zero)
-  = -- TODO: think for a RANDOM number of time steps
-    next (thinking (suc (suc (suc (suc (suc zero))))))
+  : Philosopher
+  → OverallState
+  → Blockable OverallState
+philosopherNextAtomicStep p s with (getPhilosopher p s)
+... | thinking (suc n)
+  = next (setPhilosopher p (thinking n) s)
+... | thinking zero
+  = -- grabbed-one-fork
+    tryGrabFirstFork p s
+... | grabbed-one-fork
+  = -- eating 5
+    tryGrabSecondFork p s
+... | eating (suc n)
+  = next (setPhilosopher p (eating n) s)
+... | eating zero
+  = -- thinking 5
+    next (releaseForks p s)
+
