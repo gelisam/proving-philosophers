@@ -1,5 +1,16 @@
 module Types where
 
+open import Data.Fin using (Fin; zero; suc)
+open import Data.Nat using (ℕ)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Vec using (Vec)
+
+
+----------------------------------------------
+-- Datatypes for representing the evolution --
+-- of non-deterministic systems             --
+----------------------------------------------
+
 data FiniteDeadlockable (S : Set) (A : Set) : Set where
   deadlocked
     : FiniteDeadlockable S A
@@ -126,6 +137,7 @@ lifecycle {S} {A} possibleSteps advanceTime s0
       (lifecycleImpl.stepFun possibleSteps advanceTime)
       (next s0)
 
+
 -------------------
 -- proof objects --
 -------------------
@@ -177,3 +189,85 @@ data AllTree
     → ((s : S) → PredS s → AllMagma PredFS (stepFun s))
     → PredFS fs0
     → AllTree PredS PredFS (mkTree stepFun fs0)
+
+
+---------------------------------------
+-- Modelling the Dining Philosophers --
+---------------------------------------
+
+data PhilosopherState : Set where
+  thinking
+    : ℕ
+    → PhilosopherState
+  eating
+    : ℕ
+    → PhilosopherState
+  grabbed-one-fork
+    : PhilosopherState
+
+data ForkState : Set where
+  locked
+    : ForkState
+  unlocked
+    : ForkState
+
+PhilosopherStates : Set
+PhilosopherStates = Vec PhilosopherState 5
+
+ForkStates : Set
+ForkStates = Vec ForkState 5
+
+OverallState : Set
+OverallState = PhilosopherStates × ForkStates
+
+record Philosopher : Set where
+  constructor mkPhilosopher
+  field
+    index
+      : Fin 5
+
+record Fork : Set where
+  constructor mkFork
+  field
+    index
+      : Fin 5
+
+-- 5 philosophers and 5 forks, arranged in a circle.
+--
+--       P4 F0 P0
+--     F4        F1
+--    P3          P1
+--       F3    F2
+--          P2
+--
+-- Each philosopher grabs the fork with the lower index first.
+philosopherForks
+  : Philosopher
+  → Fork × Fork
+philosopherForks (mkPhilosopher zero)
+  = mkFork zero
+  , mkFork (suc (suc (suc (suc zero))))
+philosopherForks (mkPhilosopher (suc zero))
+  = mkFork zero
+  , mkFork (suc zero)
+philosopherForks (mkPhilosopher (suc (suc zero)))
+  = mkFork (suc zero)
+  , mkFork (suc (suc zero))
+philosopherForks (mkPhilosopher (suc (suc (suc zero))))
+  = mkFork (suc (suc zero))
+  , mkFork (suc (suc (suc zero)))
+philosopherForks (mkPhilosopher (suc (suc (suc (suc zero)))))
+  = mkFork (suc (suc (suc zero)))
+  , mkFork (suc (suc (suc (suc zero))))
+
+firstFork
+  : Philosopher
+  → Fork
+firstFork p
+  = proj₁ (philosopherForks p)
+
+secondFork
+  : Philosopher
+  → Fork
+secondFork p
+  = proj₂ (philosopherForks p)
