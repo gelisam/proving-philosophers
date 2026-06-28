@@ -1,9 +1,10 @@
 module Types where
 
+open import Data.Bool using (Bool; true; false)
 open import Data.Fin using (Fin; zero; suc)
-open import Data.Nat using (ℕ)
+open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
-open import Data.Vec using (Vec)
+open import Data.Vec using (Vec; lookup)
 
 
 ----------------------------------------------
@@ -29,12 +30,21 @@ data Finite (S : Set) (A : Set) : Set where
     : S
     → Finite S A
 
+-- deadlocked is permanent
 data Deadlockable (S : Set) : Set where
   deadlocked
     : Deadlockable S
   next
     : S
     → Deadlockable S
+
+-- blocked could be temporary or permanent
+data Blockable (S : Set) : Set where
+  blocked
+    : Blockable S
+  next
+    : S
+    → Blockable S
 
 data Magma (A : Set) : Set where
   atom
@@ -271,3 +281,51 @@ secondFork
   → Fork
 secondFork p
   = proj₂ (philosopherForks p)
+
+canGrabFirstFork
+  : ForkStates
+  → Philosopher
+  → Bool
+canGrabFirstFork forks p
+  with (lookup forks (Fork.index (firstFork p)))
+... | locked
+  = false
+... | unlocked
+  = true
+
+canGrabSecondFork
+  : ForkStates
+  → Philosopher
+  → Bool
+canGrabSecondFork forks p
+  with (lookup forks (Fork.index (secondFork p)))
+... | locked
+  = false
+... | unlocked
+  = true
+
+philosopherNextAtomicStep
+  : ForkStates
+  → Philosopher
+  → PhilosopherState
+  → Blockable PhilosopherState
+philosopherNextAtomicStep forks p (thinking (suc n))
+  = next (thinking n)
+philosopherNextAtomicStep forks p (thinking zero)
+  with canGrabFirstFork forks p
+... | false
+  = blocked
+... | true
+  = next grabbed-one-fork
+philosopherNextAtomicStep forks p grabbed-one-fork
+  with canGrabSecondFork forks p
+... | false
+  = blocked
+... | true
+  = -- TODO: sleep for a RANDOM number of time steps
+    next (eating (suc (suc (suc (suc (suc zero))))))
+philosopherNextAtomicStep forks p (eating (suc n))
+  = next (eating n)
+philosopherNextAtomicStep forks p (eating zero)
+  = -- TODO: think for a RANDOM number of time steps
+    next (thinking (suc (suc (suc (suc (suc zero))))))
