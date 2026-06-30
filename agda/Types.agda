@@ -70,6 +70,12 @@ FinitePausablePossibilityTree : Set → Set → Set
 FinitePausablePossibilityTree S A
   = Tree S (FinitePausable S A)
 
+
+------------------------------------
+-- Constructing non-deterministic --
+-- systems from simpler parts     --
+------------------------------------
+
 PossibleAtomicSteps : Set → Set → Set
 PossibleAtomicSteps S A = S → FinitePausable (Magma S) A
 
