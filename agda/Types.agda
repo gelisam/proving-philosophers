@@ -8,7 +8,7 @@ open import Data.Vec using (Vec; lookup; _[_]≔_)
 
 
 ----------------------------------------------
--- Datatypes for representing the evolution --
+-- datatypes for representing the evolution --
 -- of non-deterministic systems             --
 ----------------------------------------------
 
@@ -72,7 +72,7 @@ FinitePausablePossibilityTree S A
 
 
 ------------------------------------
--- Constructing non-deterministic --
+-- constructing non-deterministic --
 -- systems from simpler parts     --
 ------------------------------------
 
@@ -201,7 +201,7 @@ data AllTree
 
 
 -------------------------
--- Data model for the  --
+-- data model for the  --
 -- Dining Philosophers --
 -------------------------
 
@@ -339,7 +339,7 @@ canGrabSecondFork p s
 
 
 ---------------------------------
--- Possible execution tree for --
+-- possible execution tree for --
 -- the Dining Philosophers     --
 ---------------------------------
 
