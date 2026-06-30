@@ -77,31 +77,7 @@ FinitePausablePossibilityTree S A
 ------------------------------------
 
 PossibleAtomicSteps : Set → Set → Set
-PossibleAtomicSteps S A = S → FinitePausable (Magma S) A
-
-module timeStepImpl
-         {S A}
-         (possibleSteps : PossibleAtomicSteps S A)
-         where
-  mutual
-    stepFuns
-      : Magma S
-      → Magma (FinitePausable S A)
-    stepFuns (atom s)
-      = atom (next s)
-    stepFuns (concat m1 m2)
-      = concat (stepFuns m1) (stepFuns m2)
-
-    stepFun
-      : S
-      → Magma (FinitePausable S A)
-    stepFun s with possibleSteps s
-    ... | paused
-        = atom paused
-    ... | done a
-        = atom (done a)
-    ... | next ss
-        = stepFuns ss
+PossibleAtomicSteps S A = S → Magma (FinitePausable S A)
 
 timeStep
   : ∀ {S A}
@@ -109,9 +85,7 @@ timeStep
   → S
   → FinitePausablePossibilityTree S A
 timeStep {S} {A} possibleSteps s0
-  = mkTree
-      (timeStepImpl.stepFun possibleSteps)
-      (next s0)
+  = mkTree possibleSteps (next s0)
 
 module lifecycleImpl
          {S A}
@@ -133,7 +107,7 @@ module lifecycleImpl
   stepFun
     : S → Magma (Pausable S)
   stepFun s
-    = advanceTimes (timeStepImpl.stepFun possibleSteps s)
+    = advanceTimes (possibleSteps s)
 
 lifecycle
   : ∀ {S A}
@@ -184,7 +158,7 @@ PossibleAtomicStepsAreNotPaused
   → PossibleAtomicSteps S A
   → Set
 PossibleAtomicStepsAreNotPaused {S} {A} possibleAtomicSteps
-  = ∀ s → FiniteButNotPaused (possibleAtomicSteps s)
+  = ∀ s → AllMagma FiniteButNotPaused (possibleAtomicSteps s)
 
 data AllTree
        {S : Set}
