@@ -347,39 +347,39 @@ tryGrabFirstFork
   : Philosopher
   → OverallState
   → Pausable OverallState
-tryGrabFirstFork p s with (canGrabFirstFork p s)
+tryGrabFirstFork p s0 with (canGrabFirstFork p s0)
 ... | false
   = paused
 ... | true
-  = let s' = setPhilosopher p grabbed-one-fork s
- in let s'' = setFork (firstFork p) locked s'
- in next s''
+  = let s1 = setPhilosopher p grabbed-one-fork s0
+ in let s2 = setFork (firstFork p) locked s1
+ in next s2
 
 tryGrabSecondFork
   : Philosopher
   → OverallState
   → Pausable OverallState
-tryGrabSecondFork p s with (canGrabSecondFork p s)
+tryGrabSecondFork p s0 with (canGrabSecondFork p s0)
 ... | false
   = paused
 ... | true
   = let n = -- TODO: sleep for a RANDOM number of time steps
             suc (suc (suc (suc (suc zero))))
- in let s' = setPhilosopher p (thinking n) s
- in let s'' = setFork (secondFork p) locked s'
- in next s''
+ in let s1 = setPhilosopher p (thinking n) s0
+ in let s2 = setFork (secondFork p) locked s1
+ in next s2
 
 releaseForks
   : Philosopher
   → OverallState
   → OverallState
-releaseForks p s
+releaseForks p s0
   = let n = -- TODO: think for a RANDOM number of time steps
             suc (suc (suc (suc (suc zero))))
- in let s' = setPhilosopher p (thinking n) s
- in let s'' = setFork (firstFork p) unlocked s'
- in let s''' = setFork (secondFork p) unlocked s''
- in s'''
+ in let s1 = setPhilosopher p (thinking n) s0
+ in let s2 = setFork (firstFork p) unlocked s1
+ in let s3 = setFork (secondFork p) unlocked s2
+ in s3
 
 philosopherNextAtomicStep
   : Philosopher
