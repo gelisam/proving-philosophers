@@ -6,6 +6,8 @@ open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Vec using (Vec; lookup; _[_]≔_)
 
+open import Types.Magma using (Magma; atom; concat; AllMagma)
+
 
 ----------------------------------------------
 -- datatypes for representing the evolution --
@@ -38,15 +40,6 @@ data Pausable (S : Set) : Set where
   next
     : S
     → Pausable S
-
-data Magma (A : Set) : Set where
-  atom
-    : A
-    → Magma A
-  concat
-    : Magma A
-    → Magma A
-    → Magma A
 
 data Tree (S : Set) (FS : Set) : Set where
   mkTree
@@ -141,17 +134,6 @@ data NotPaused {S : Set} : Pausable S → Set where
   next
     : (s : S)
     → NotPaused (next s)
-
-data AllMagma {A : Set} (F : A → Set) : Magma A → Set where
-  atom
-    : ∀ {a}
-    → F a
-    → AllMagma F (atom a)
-  concat
-    : ∀ {m1 m2}
-    → AllMagma F m1
-    → AllMagma F m2
-    → AllMagma F (concat m1 m2)
 
 PossibleAtomicStepsAreNotPaused
   : ∀ {S A}
