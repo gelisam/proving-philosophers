@@ -1,7 +1,10 @@
 -- IdleState is the subset of State from which no actions can be performed.
 module TimeStep (State : Set) (Idle : State → Set) where
 
-open import Types.Magma using (Magma; concat)
+open import Types.Magma using (Magma; atom; concat; mapMagma)
+import ExecutionModel using (Deadlockable; deadlocked; live; Tree; MkTree; StepFun)
+
+open ExecutionModel State
 
 -- What to do next, either for a given philosopher or for the system as a whole.
 data Next (s : State) : Set where
@@ -52,3 +55,31 @@ _ <> ready-for-next-time-step p2
 blocked p1 <> blocked _p2
   = -- it doesn't matter which proof we keep
     blocked p1
+
+-- We chain together a number of atomic within-time-step actions until the
+-- system is ready to move on to the next time step, then we perform the
+-- between-time-steps cleanup action, and continue with the next time step.
+-- The result is a tree of all possible interleavings of actions.
+--
+-- Note that the tree is defined as an infinite number of calls to StepFun,
+-- where each such "step" is either an atomic within-time-step action or a
+-- between-time-steps cleanup action.
+timeStepsToStepFun
+  : (∀ s → Next s)
+  → (∀ s → Idle s → State)
+  → StepFun
+timeStepsToStepFun withinTimeStep betweenTimeSteps s0
+  with withinTimeStep s0
+... | choice m
+  = mapMagma live m
+... | ready-for-next-time-step p
+  = atom (live (betweenTimeSteps s0 p))
+... | blocked p
+  = atom deadlocked
+
+timeStepsToTree
+  : (∀ s → Next s)
+  → (∀ s → Idle s → State)
+  → State → Tree
+timeStepsToTree withinTimeStep betweenTimeSteps
+  = MkTree (timeStepsToStepFun withinTimeStep betweenTimeSteps)
