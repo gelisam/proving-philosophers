@@ -1,5 +1,5 @@
 -- IdleState is the subset of State from which no actions can be performed.
-module ExecutionModel (State : Set) (Idle : State → Set) where
+module TimeStep (State : Set) (Idle : State → Set) where
 
 open import Types.Magma using (Magma; concat)
 
