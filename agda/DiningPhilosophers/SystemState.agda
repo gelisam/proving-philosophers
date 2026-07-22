@@ -2,7 +2,7 @@ module DiningPhilosophers.SystemState where
 
 open import Data.Fin using (Fin)
 open import Data.Nat using (ℕ)
-open import Data.Vec using (Vec)
+open import Data.Vec using (Vec; lookup; _[_]≔_)
 
 data PhilosopherState : Set where
   ready-to-think
@@ -51,3 +51,37 @@ record Fork : Set where
   field
     index
       : Fin 5
+
+getPhilosopherState
+  : Philosopher
+  → SystemState
+  → PhilosopherState
+getPhilosopherState p (mkSystemState philosophers _)
+  = lookup philosophers (Philosopher.index p)
+
+setPhilosopherState
+  : Philosopher
+  → PhilosopherState
+  → SystemState
+  → SystemState
+setPhilosopherState p ps' (mkSystemState philosophers forks)
+  = mkSystemState
+      (philosophers [ Philosopher.index p ]≔ ps')
+      forks
+
+getForkState
+  : Fork
+  → SystemState
+  → ForkState
+getForkState f (mkSystemState _ forks)
+  = lookup forks (Fork.index f)
+
+setForkState
+  : Fork
+  → ForkState
+  → SystemState
+  → SystemState
+setForkState f fs' (mkSystemState philosophers forks)
+  = mkSystemState
+      philosophers
+      (forks [ Fork.index f ]≔ fs')
