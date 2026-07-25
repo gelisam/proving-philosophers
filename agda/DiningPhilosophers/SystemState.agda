@@ -5,7 +5,19 @@ open import Data.Nat using (ℕ)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Vec using (Vec; lookup; _[_]≔_)
 
+open import Types.Magma using (Magma; atom; concat)
+
 data PhilosopherState : Set where
+  ready-to-eat
+    : PhilosopherState
+  ready-for-eating-time-step
+    : ℕ  -- eating steps _after_ this step, so 0 means
+         -- eat for one time step, this one.
+    → PhilosopherState
+  done-with-eating-time-step
+    : ℕ  -- eating steps _after_ this step, so 0 means
+         -- we are done eating altogether.
+    → PhilosopherState
   ready-to-think
     : PhilosopherState
   ready-for-thinking-time-step
@@ -20,16 +32,6 @@ data PhilosopherState : Set where
     : PhilosopherState
   ready-to-grab-second-fork
     : PhilosopherState
-  ready-to-eat
-    : PhilosopherState
-  ready-for-eating-time-step
-    : ℕ  -- eating steps _after_ this step, so 0 means
-         -- eat for one time step, this one.
-    → PhilosopherState
-  done-with-eating-time-step
-    : ℕ  -- eating steps _after_ this step, so 0 means
-         -- we are done eating altogether.
-    → PhilosopherState
 
 data ForkState : Set where
   locked
