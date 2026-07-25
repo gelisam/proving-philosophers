@@ -53,11 +53,29 @@ record Philosopher : Set where
     index
       : Fin 5
 
+allPhilosophers
+  : Magma Philosopher
+allPhilosophers
+  = concat (atom (mkPhilosopher (# 0)))
+  ( concat (atom (mkPhilosopher (# 1)))
+  ( concat (atom (mkPhilosopher (# 2)))
+  ( concat (atom (mkPhilosopher (# 3)))
+           (atom (mkPhilosopher (# 4))))))
+
 record Fork : Set where
   constructor mkFork
   field
     index
       : Fin 5
+
+allForks
+  : Magma Fork
+allForks
+  = concat (atom (mkFork (# 0)))
+  ( concat (atom (mkFork (# 1)))
+  ( concat (atom (mkFork (# 2)))
+  ( concat (atom (mkFork (# 3)))
+           (atom (mkFork (# 4))))))
 
 getPhilosopherState
   : Philosopher
