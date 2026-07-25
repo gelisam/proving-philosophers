@@ -1,7 +1,8 @@
 module DiningPhilosophers.SystemState where
 
-open import Data.Fin using (Fin)
+open import Data.Fin using (Fin; zero; suc; #_)
 open import Data.Nat using (ℕ)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Vec using (Vec; lookup; _[_]≔_)
 
 data PhilosopherState : Set where
@@ -89,3 +90,59 @@ setForkState f fs' (mkSystemState philosophers forks)
   = mkSystemState
       philosophers
       (forks [ Fork.index f ]≔ fs')
+
+firstAndSecondFork
+  : Philosopher
+  → Fork × Fork
+firstAndSecondFork (mkPhilosopher zero)
+  = mkFork (# 0) , mkFork (# 4)
+firstAndSecondFork (mkPhilosopher (suc zero))
+  = mkFork (# 0) , mkFork (# 1)
+firstAndSecondFork (mkPhilosopher (suc (suc zero)))
+  = mkFork (# 1) , mkFork (# 2)
+firstAndSecondFork (mkPhilosopher (suc (suc (suc zero))))
+  = mkFork (# 2) , mkFork (# 3)
+firstAndSecondFork (mkPhilosopher (suc (suc (suc (suc zero)))))
+  = mkFork (# 3) , mkFork (# 4)
+
+firstFork
+  : Philosopher
+  → Fork
+firstFork p
+  = proj₁ (firstAndSecondFork p)
+
+secondFork
+  : Philosopher
+  → Fork
+secondFork p
+  = proj₂ (firstAndSecondFork p)
+
+getFirstForkState
+  : Philosopher
+  → SystemState
+  → ForkState
+getFirstForkState p
+  = getForkState (firstFork p)
+
+getSecondForkState
+  : Philosopher
+  → SystemState
+  → ForkState
+getSecondForkState p
+  = getForkState (secondFork p)
+
+setFirstForkState
+  : Philosopher
+  → ForkState
+  → SystemState
+  → SystemState
+setFirstForkState p forkState
+  = setForkState (firstFork p) forkState
+
+setSecondForkState
+  : Philosopher
+  → ForkState
+  → SystemState
+  → SystemState
+setSecondForkState p forkState
+  = setForkState (secondFork p) forkState
