@@ -8,10 +8,12 @@ data PhilosopherState : Set where
   ready-to-think
     : PhilosopherState
   ready-for-thinking-time-step
-    : ℕ
+    : ℕ  -- thinking steps _after_ this step, so 0 means
+         -- think for one time step, this one.
     → PhilosopherState
   done-with-thinking-time-step
-    : ℕ
+    : ℕ  -- thinking steps _after_ this step, so 0 means
+         -- we are done thinking altogether.
     → PhilosopherState
   ready-to-grab-first-fork
     : PhilosopherState
@@ -20,10 +22,12 @@ data PhilosopherState : Set where
   ready-to-eat
     : PhilosopherState
   ready-for-eating-time-step
-    : ℕ
+    : ℕ  -- eating steps _after_ this step, so 0 means
+         -- eat for one time step, this one.
     → PhilosopherState
   done-with-eating-time-step
-    : ℕ
+    : ℕ  -- eating steps _after_ this step, so 0 means
+         -- we are done eating altogether.
     → PhilosopherState
 
 data ForkState : Set where
