@@ -1,5 +1,5 @@
 -- IdleState is the subset of State from which no actions can be performed.
-module TimeStep (State : Set) (Idle : State → Set) where
+module TimeStep (State : Set) where
 
 open import Types.Magma using (Magma; atom; concat; mapMagma)
 import ExecutionModel using (Deadlockable; deadlocked; live; Tree; MkTree; StepFun)
@@ -7,22 +7,20 @@ import ExecutionModel using (Deadlockable; deadlocked; live; Tree; MkTree; StepF
 open ExecutionModel State
 
 -- What to do next, either for a given philosopher or for the system as a whole.
-data Next (s : State) : Set where
+data Next : Set where
   -- The next state is to be non-deterministically chosen from a set of possible
   -- next states. Then continue within the same time step.
   choice
     : Magma State
-    → Next s
+    → Next
   -- At least one action was performed during this time step, and we are ready
   -- to move on to the next one.
   ready-for-next-time-step
-    : Idle s
-    → Next s
+    : Next
   -- Nothing happened during this time step. If nothing changes, the system is
   -- deadlocked.
   blocked
-    : Idle s
-    → Next s
+    : Next
 
 -- Combine what multiple philosophers want to do next into a single next state
 -- for the system as a whole.
@@ -37,24 +35,19 @@ data Next (s : State) : Set where
 -- have to prove that every philosopher eats infinitely often, it does not
 -- suffice to prove that the system never deadlocks.
 _<>_
-  : ∀ {s}
-  → Next s
-  → Next s
-  → Next s
+  : Next → Next → Next
 choice m1 <> choice m2
   = choice (concat m1 m2)
 choice m <> _
   = choice m
 _ <> choice m
   = choice m
-ready-for-next-time-step p1 <> _
-  = -- if _ also contains an (Idle s), it doesn't matter which proof we keep
-    ready-for-next-time-step p1
-_ <> ready-for-next-time-step p2
-  = ready-for-next-time-step p2
-blocked p1 <> blocked _p2
-  = -- it doesn't matter which proof we keep
-    blocked p1
+ready-for-next-time-step <> _
+  = ready-for-next-time-step
+_ <> ready-for-next-time-step
+  = ready-for-next-time-step
+blocked <> blocked
+  = blocked
 
 -- We chain together a number of atomic within-time-step actions until the
 -- system is ready to move on to the next time step, then we perform the
@@ -65,21 +58,21 @@ blocked p1 <> blocked _p2
 -- where each such "step" is either an atomic within-time-step action or a
 -- between-time-steps cleanup action.
 timeStepsToStepFun
-  : (∀ s → Next s)
-  → (∀ s → Idle s → State)
+  : (State → Next)
+  → (State → State)
   → StepFun
 timeStepsToStepFun withinTimeStep betweenTimeSteps s0
   with withinTimeStep s0
 ... | choice m
   = mapMagma live m
-... | ready-for-next-time-step p
-  = atom (live (betweenTimeSteps s0 p))
-... | blocked p
+... | ready-for-next-time-step
+  = atom (live (betweenTimeSteps s0))
+... | blocked
   = atom deadlocked
 
 timeStepsToTree
-  : (∀ s → Next s)
-  → (∀ s → Idle s → State)
+  : (State → Next)
+  → (State → State)
   → State → Tree
 timeStepsToTree withinTimeStep betweenTimeSteps
   = MkTree (timeStepsToStepFun withinTimeStep betweenTimeSteps)
