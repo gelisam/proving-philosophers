@@ -3,6 +3,7 @@ module DiningPhilosophers.SystemState where
 open import Data.Fin using (Fin)
 open import Data.Nat using (ℕ)
 open import Data.Vec using (Vec; lookup; _[_]≔_)
+open import Data.Vec.Relation.Unary.All using (All)
 
 data PhilosopherState : Set where
   ready-to-think
@@ -30,6 +31,18 @@ data PhilosopherState : Set where
          -- we are done eating altogether.
     → PhilosopherState
 
+data IdlePhilosopher : PhilosopherState → Set where
+  done-with-thinking-time-step
+    : ∀ {n}
+    → IdlePhilosopher (done-with-thinking-time-step n)
+  blocked-from-grabbing-first-fork
+    : IdlePhilosopher ready-to-grab-first-fork
+  blocked-from-grabbing-second-fork
+    : IdlePhilosopher ready-to-grab-second-fork
+  done-with-eating-time-step
+    : ∀ {n}
+    → IdlePhilosopher (done-with-eating-time-step n)
+
 data ForkState : Set where
   locked
     : ForkState
@@ -43,6 +56,12 @@ record SystemState : Set where
       : Vec PhilosopherState 5
     forks
       : Vec ForkState 5
+
+data IdleSystemState : SystemState → Set where
+  mkIdleSystemState
+    : ∀ {philosophers forks}
+    → All IdlePhilosopher philosophers
+    → IdleSystemState (mkSystemState philosophers forks)
 
 record Philosopher : Set where
   constructor mkPhilosopher
