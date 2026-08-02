@@ -34,20 +34,30 @@ data Next : Set where
 -- system is not deadlocked yet. It might still be livelocked, which is why we
 -- have to prove that every philosopher eats infinitely often, it does not
 -- suffice to prove that the system never deadlocks.
-_<>_
+mappendNexts
   : Next → Next → Next
-choice m1 <> choice m2
+mappendNexts (choice m1) (choice m2)
   = choice (concat m1 m2)
-choice m <> _
+mappendNexts (choice m) _
   = choice m
-_ <> choice m
+mappendNexts _ (choice m)
   = choice m
-ready-for-next-time-step <> _
+mappendNexts ready-for-next-time-step _
   = ready-for-next-time-step
-_ <> ready-for-next-time-step
+mappendNexts _ ready-for-next-time-step
   = ready-for-next-time-step
-blocked <> blocked
+mappendNexts blocked blocked
   = blocked
+
+mconcatNexts
+  : Magma Next
+  → Next
+mconcatNexts (atom next)
+  = next
+mconcatNexts (concat m1 m2)
+  = mappendNexts
+      (mconcatNexts m1)
+      (mconcatNexts m2)
 
 -- We chain together a number of atomic within-time-step actions until the
 -- system is ready to move on to the next time step, then we perform the
