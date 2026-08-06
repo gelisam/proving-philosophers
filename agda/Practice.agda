@@ -8,12 +8,12 @@ open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; ∃-syntax)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import Types.All1 using (All1; [_]; _∷_)
-open import Types.Readability using (starting-at_knowing_apply)
+open import Types.Proof.All1 using (All1; [_]; _∷_)
+open import Types.Proof.Readability using (starting-at_knowing_apply)
 open import Types.Tree using (Tree; MkTree)
-import Types.AllPaths using (AllPaths; here; there; AllPaths-map; _>>=_)
-import Types.AllSubtrees using (AllSubtrees; AllSubtrees-induction)
-import Types.InfinitelyOften using (InfinitelyOften; infinitelyOften)
+import Types.Proof.AllPaths using (AllPaths; here; there; AllPaths-map; _>>=_)
+import Types.Proof.AllSubtrees using (AllSubtrees; AllSubtrees-induction)
+import Types.Proof.InfinitelyOften using (InfinitelyOften; infinitelyOften)
 
 -- A much simplified version of the infinite tree of program states which we
 -- want to use for the Dining Philosophers problem. In this simplified version,
@@ -56,9 +56,9 @@ natTreeStep (x , y)
 natTree : ℕ × ℕ → Tree (ℕ × ℕ)
 natTree nn = MkTree natTreeStep nn
 
-open Types.AllPaths natTreeStep
-open Types.AllSubtrees natTreeStep
-open Types.InfinitelyOften natTreeStep
+open Types.Proof.AllPaths natTreeStep
+open Types.Proof.AllSubtrees natTreeStep
+open Types.Proof.InfinitelyOften natTreeStep
 
 IsTwoTwo
   : ℕ × ℕ → Set

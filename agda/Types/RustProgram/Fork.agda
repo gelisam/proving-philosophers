@@ -1,4 +1,4 @@
-module Types.Fork where
+module Types.RustProgram.Fork where
 
 open import Data.Nat using (ℕ)
 open import Data.Nat.Show using (show)

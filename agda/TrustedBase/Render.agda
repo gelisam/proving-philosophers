@@ -5,11 +5,11 @@ open import Data.Nat.Show using (show)
 open import Data.List.Base using (List; []; _∷_; reverse; map)
 open import Data.String.Base as Str using (String; _++_)
 
-open import Types.Syntax using (Syntax; Line; Block; Indent)
-open import Types.Fork using (Fork; MkFork; show-fork)
-open import Types.Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
-open import Types.Thread using (Thread; MkThread)
-open import Types.Program using (Program; MkProgram)
+open import Types.RustProgram.Syntax using (Syntax; Line; Block; Indent)
+open import Types.RustProgram.Fork using (Fork; MkFork; show-fork)
+open import Types.RustProgram.Stmt using (Stmt; ThinkRandomly; EatRandomly; LockFork)
+open import Types.RustProgram.Thread using (Thread; MkThread)
+open import Types.RustProgram.Program using (Program; MkProgram)
 
 -- Generate a Rust declaration for a fork, e.g.:
 -- static FORK_1_2: Mutex<()> = Mutex::new(());

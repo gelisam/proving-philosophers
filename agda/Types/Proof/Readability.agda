@@ -1,4 +1,4 @@
-module Types.Readability where
+module Types.Proof.Readability where
 
 starting-at_knowing_apply
   : {A : Set} {P : A → Set} {R : (x : A) → P x → Set}
