@@ -46,21 +46,3 @@ stepFun (MkTree f _) = f
 
 childStates : Tree → Magma Deadlockable
 childStates (MkTree f s) = f s
-
-data LiveDeadlockable : Deadlockable → Set where
-  live
-    : ∀ s
-    → LiveDeadlockable (live s)
-
-LiveMagmaDeadlockable : Magma Deadlockable → Set
-LiveMagmaDeadlockable
-  = AllMagma LiveDeadlockable
-
-LiveStepFun : StepFun → Set
-LiveStepFun f
-  = ∀ s
-  → LiveMagmaDeadlockable (f s)
-
-LiveTree : Tree → Set
-LiveTree (MkTree f _s)
-  = LiveStepFun f
