@@ -65,3 +65,23 @@ leadsToThen
   → P LeadsTo R
 leadsToThen pLeadsToQ qLeadsToR s ps
   = eventuallyThen (pLeadsToQ s ps) qLeadsToR
+
+eventuallySoonerOrLater
+  : ∀ {P Q s}
+  → Eventually (λ s → P s ⊎ Q s) s
+  → P LeadsTo Q
+  → Eventually Q s
+eventuallySoonerOrLater {P} {Q} eventuallyPOrQ pLeadsToQ
+  = eventuallyThen eventuallyPOrQ pOrQLeadsToQ
+  where
+    pOrQLeadsToQ : (λ s → P s ⊎ Q s) LeadsTo Q
+    pOrQLeadsToQ s (inj₁ ps) = pLeadsToQ s ps
+    pOrQLeadsToQ s (inj₂ qs) = now qs
+
+leadsToSoonerOrLater
+  : ∀ {P Q R}
+  → P LeadsTo (λ s → Q s ⊎ R s)
+  → Q LeadsTo R
+  → P LeadsTo R
+leadsToSoonerOrLater pLeadsToQOrR qLeadsToR s ps
+  = eventuallySoonerOrLater (pLeadsToQOrR s ps) qLeadsToR
