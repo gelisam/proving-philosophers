@@ -1,5 +1,4 @@
-open import Data.Fin using (Fin; zero; fromℕ; _<_)
-open import Data.Nat using (ℕ; suc)
+open import Data.Nat using (ℕ; zero; suc; _<_)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (∃; _×_; _,_; proj₁; proj₂)
 
@@ -35,6 +34,12 @@ _LeadsTo_
   → Set
 P LeadsTo Q
   = ∀ s → P s → Eventually Q s
+
+alreadyHere
+  : ∀ {P}
+  → P LeadsTo P
+alreadyHere s ps
+  = now ps
 
 mutual
   eventuallyThen
@@ -89,9 +94,40 @@ leadsToSoonerOrLater
 leadsToSoonerOrLater pLeadsToQOrR qLeadsToR s ps
   = eventuallySoonerOrLater (pLeadsToQOrR s ps) qLeadsToR
 
-leadsToALaterStep
-  : (n : ℕ)
-  → (P : Fin (suc n) → State → Set)
-  → (∀ j → (P j) LeadsTo (λ s → ∃ λ i → i < j × P i s))
-  → (P zero) LeadsTo (P (fromℕ n))
-leadsToALaterStep = _
+-- "Later" step means a smaller number, as we count downwards to zero in order
+-- to make termination-checking easier.
+module _
+  (P : ℕ → State → Set)
+  (leadsToLaterStep : ∀ j → (P j) LeadsTo (λ s → ∃ λ i → i < j × P i s))
+  where
+    -- BEGIN machinery for implementing 'leadsToLastStep'
+
+    PiOrLater
+      : ℕ → State → Set
+    PiOrLater zero s
+      = P zero s
+    PiOrLater (suc i) s
+      = P (suc i) s
+      ⊎ PiOrLater i s
+
+    existsToOr
+      : ∀ {i s}
+      → ∃ (λ j → j < suc i × P j s)
+      → P i s
+      ⊎ ∃ (λ j → j < i × P j s)
+    existsToOr {i} {s} (j , (lt , ps)) with lt
+    ... | inj₁ refl = inj₁ ps
+    ... | inj₂ lt' = inj₂ (j , (lt' , ps))
+
+    -- END machinery for implementing 'leadsToLastStep'
+
+    ---- A generalization of 'leadsToSoonerOrLater' with more than two steps.
+    --leadsToLastStep
+    --  : ∀ i
+    --  → (P i) LeadsTo (P 0)
+    --leadsToLastStep zero
+    --  = alreadyHere
+    --leadsToLastStep (suc i) s ps
+    --  = eventuallySoonerOrLater
+    --      (leadsToLaterStep (suc i) s ps)
+    --      (leadsToLastStep i)
