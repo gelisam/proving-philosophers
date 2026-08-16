@@ -1,4 +1,7 @@
+open import Data.Fin using (Fin; zero; fromℕ; _<_)
+open import Data.Nat using (ℕ; suc)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (∃; _×_; _,_; proj₁; proj₂)
 
 import ExecutionModel using (Deadlockable; live; StepFun; Tree)
 open import Types.Magma using (Magma; atom; concat)
@@ -85,3 +88,10 @@ leadsToSoonerOrLater
   → P LeadsTo R
 leadsToSoonerOrLater pLeadsToQOrR qLeadsToR s ps
   = eventuallySoonerOrLater (pLeadsToQOrR s ps) qLeadsToR
+
+leadsToALaterStep
+  : (n : ℕ)
+  → (P : Fin (suc n) → State → Set)
+  → (∀ j → (P j) LeadsTo (λ s → ∃ λ i → i < j × P i s))
+  → (P zero) LeadsTo (P (fromℕ n))
+leadsToALaterStep = _
