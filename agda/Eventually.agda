@@ -1,4 +1,4 @@
-open import Data.Nat using (ℕ; zero; suc; _<_)
+open import Data.Nat using (ℕ; zero; suc; _<′_; <′-base; <′-step)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (∃; _×_; _,_; proj₁; proj₂)
 
@@ -98,26 +98,19 @@ leadsToSoonerOrLater pLeadsToQOrR qLeadsToR s ps
 -- to make termination-checking easier.
 module _
   (P : ℕ → State → Set)
-  (leadsToLaterStep : ∀ j → (P j) LeadsTo (λ s → ∃ λ i → i < j × P i s))
+  (leadsToLaterStep : ∀ j → (P j) LeadsTo (λ s → ∃ λ i → i <′ j × P i s))
   where
     -- BEGIN machinery for implementing 'leadsToLastStep'
 
-    PiOrLater
-      : ℕ → State → Set
-    PiOrLater zero s
-      = P zero s
-    PiOrLater (suc i) s
-      = P (suc i) s
-      ⊎ PiOrLater i s
-
     existsToOr
-      : ∀ {i s}
-      → ∃ (λ j → j < suc i × P j s)
-      → P i s
-      ⊎ ∃ (λ j → j < i × P j s)
-    existsToOr {i} {s} (j , (lt , ps)) with lt
-    ... | inj₁ refl = inj₁ ps
-    ... | inj₂ lt' = inj₂ (j , (lt' , ps))
+      : ∀ {j s}
+      → ∃ (λ i → i <′ suc j × P i s)
+      → P j s
+      ⊎ ∃ (λ i → i <′ j × P i s)
+    existsToOr {j} {s} (.j , (<′-base , pj))
+      = inj₁ pj
+    existsToOr {j} {s} (i , (<′-step i<′j , pi))
+      = inj₂ (i , (i<′j , pi))
 
     -- END machinery for implementing 'leadsToLastStep'
 
