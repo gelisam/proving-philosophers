@@ -1,6 +1,9 @@
-open import Data.Nat using (ℕ; zero; suc; _<′_; <′-base; <′-step)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Nat using (ℕ; zero; suc; _<′_; <′-base; <′-step; ≤′-reflexive; ≤′-refl; ≤′-step)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (∃; _×_; _,_; proj₁; proj₂)
+open import Relation.Nullary using (¬_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
 
 import ExecutionModel using (Deadlockable; live; StepFun; Tree)
 open import Types.Magma using (Magma; atom; concat)
@@ -94,33 +97,97 @@ leadsToSoonerOrLater
 leadsToSoonerOrLater pLeadsToQOrR qLeadsToR s ps
   = eventuallySoonerOrLater (pLeadsToQOrR s ps) qLeadsToR
 
--- "Later" step means a smaller number, as we count downwards to zero in order
--- to make termination-checking easier.
+ltThanOneIsZero
+  : ∀ {i}
+  → i <′ 1
+  → i ≡ 0
+ltThanOneIsZero {.zero} ≤′-refl
+  = refl
+ltThanOneIsZero {i} (≤′-step (≤′-reflexive ()))
+  -- impossible case
+
 module _
   (P : ℕ → State → Set)
-  (leadsToLaterStep : ∀ j → (P j) LeadsTo (λ s → ∃ λ i → i <′ j × P i s))
   where
     -- BEGIN machinery for implementing 'leadsToLastStep'
 
-    existsToOr
+    -- "Later" step means a smaller number, as we count downwards to zero in
+    -- order to make termination-checking easier.
+    LaterThan : ℕ → State → Set
+    LaterThan j s
+      = ∃ λ i
+      → i <′ j
+      × P i s
+
+    laterThanOneToLast
+      : ∀ {s}
+      → LaterThan 1 s
+      → P 0 s
+    laterThanOneToLast {s} (i , (i≤1 , pi))
+      = subst (λ i → P i s) (ltThanOneIsZero i≤1) pi
+
+    laterThanOneLeadsToLast
+      : (LaterThan 1) LeadsTo (P 0)
+    laterThanOneLeadsToLast s laterThan1
+      = now (laterThanOneToLast laterThan1)
+
+    ThisOrLater : ℕ → State → Set
+    ThisOrLater j s
+      = P j s
+      ⊎ LaterThan j s
+
+    laterThanSucToNextOrLater
       : ∀ {j s}
-      → ∃ (λ i → i <′ suc j × P i s)
-      → P j s
-      ⊎ ∃ (λ i → i <′ j × P i s)
-    existsToOr {j} {s} (.j , (<′-base , pj))
+      → LaterThan (suc j) s
+      → ThisOrLater j s
+    laterThanSucToNextOrLater {j} {s} (.j , (<′-base , pj))
       = inj₁ pj
-    existsToOr {j} {s} (i , (<′-step i<′j , pi))
+    laterThanSucToNextOrLater {j} {s} (i , (<′-step i<′j , pi))
       = inj₂ (i , (i<′j , pi))
 
-    -- END machinery for implementing 'leadsToLastStep'
+    laterThanSucLeadsToNextOrLater
+      : ∀ j
+      → LaterThan (suc j) LeadsTo (ThisOrLater j)
+    laterThanSucLeadsToNextOrLater j s laterThanSuc
+      = now (laterThanSucToNextOrLater laterThanSuc)
 
-    ---- A generalization of 'leadsToSoonerOrLater' with more than two steps.
-    --leadsToLastStep
-    --  : ∀ i
-    --  → (P i) LeadsTo (P 0)
-    --leadsToLastStep zero
-    --  = alreadyHere
-    --leadsToLastStep (suc i) s ps
-    --  = eventuallySoonerOrLater
-    --      (leadsToLaterStep (suc i) s ps)
-    --      (leadsToLastStep i)
+    module _
+      (leadsToLaterStep : ∀ j → (P j) LeadsTo (LaterThan j))
+      where
+        laterThanSucLeadsToLater
+          : ∀ j
+          → LaterThan (suc j) LeadsTo LaterThan j
+        laterThanSucLeadsToLater j
+          = leadsToSoonerOrLater
+              -- LaterThan (suc j) LeadsTo P j or LaterThan j
+              (laterThanSucLeadsToNextOrLater j)
+              -- P j LeadsTo LaterThan j
+              (leadsToLaterStep j)
+
+        laterThanSucLeadsToLastStep
+          : ∀ j
+          → LaterThan (suc j) LeadsTo (P 0)
+        laterThanSucLeadsToLastStep zero
+          = -- LaterThan (suc zero) LeadsTo P 0
+            laterThanOneLeadsToLast
+        laterThanSucLeadsToLastStep (suc j)
+          = leadsToThen
+              -- LaterThan (suc (suc j)) LeadsTo LaterThan (suc j)
+              (laterThanSucLeadsToLater (suc j))
+              -- LaterThan (suc j) LeadsTo P 0
+              (laterThanSucLeadsToLastStep j)
+
+        -- END machinery for implementing 'leadsToLastStep'
+
+        -- A generalization of 'leadsToSoonerOrLater' with more than two steps.
+        leadsToLastStep
+          : ∀ j
+          → (P j) LeadsTo (P 0)
+        leadsToLastStep zero
+          = alreadyHere
+        leadsToLastStep (suc j)
+          = leadsToThen
+              -- P (suc j) LeadsTo LaterThan (suc j)
+              (leadsToLaterStep (suc j))
+              -- LaterThan (suc j) LeadsTo P 0
+              (laterThanSucLeadsToLastStep j)
